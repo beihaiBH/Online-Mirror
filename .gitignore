@@ -1,0 +1,5 @@
+img/*
+!img/.htaccess
+!img/index.html
+*.log
+.DS_Store
