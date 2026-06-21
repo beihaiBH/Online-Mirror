@@ -1,12 +1,10 @@
 <?php
-/**
- * Online-Mirror 升级版 - 登录页面
- */
 session_start();
 require_once __DIR__ . '/config.php';
 
 // 退出
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    $_SESSION = [];
     session_destroy();
     header('Location: index.php');
     exit;
@@ -14,32 +12,46 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
+    requireCsrf();
     
-    if ($username && $password) {
-        try {
-            $db = getDB();
-            $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            $user = $stmt->fetch();
-            
-            if ($user && $password === $user['password']) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
-                header('Location: dashboard.php');
-                exit;
-            } else {
-                $error = '用户名或密码错误！';
-            }
-        } catch (Exception $e) {
-            $error = '系统错误，请稍后再试';
-        }
+    // 登录频率限制
+    list($login_allowed, $login_msg) = checkLoginRateLimit();
+    if (!$login_allowed) {
+        $error = $login_msg;
     } else {
-        $error = '请输入用户名和密码';
+        $username = trim($_POST['username'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        
+        if ($username && $password) {
+            try {
+                $db = getDB();
+                $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
+                $stmt->execute([$username]);
+                $user = $stmt->fetch();
+                
+                if ($user && $password === $user['password']) {
+                    session_regenerate_id(true);
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role'] = $user['role'];
+                    $_SESSION['login_ip'] = getClientIP();
+                    $_SESSION['login_time'] = time();
+                    addLog('', 'login_success');
+                    header('Location: dashboard.php');
+                    exit;
+                } else {
+                    addLog('', 'login_fail');
+                    $error = '用户名或密码错误！';
+                }
+            } catch (Exception $e) {
+                $error = '系统错误，请稍后再试';
+            }
+        } else {
+            $error = '请输入用户名和密码';
+        }
     }
 }
+$csrf = csrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -141,13 +153,14 @@ body {
 <div class="login-box">
     <div class="icon"><i class="fas fa-shield-alt"></i></div>
     <h2>管理员登录</h2>
-    <p class="sub">Online Mirror 后台管理系统</p>
+    <p class="sub">Online Mirror 后台管理系统 v2.0</p>
     
     <?php if ($error): ?>
     <div class="error"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
     
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
         <div class="form-group">
             <input type="text" name="username" placeholder="用户名" required autocomplete="username">
         </div>

@@ -1,5 +1,9 @@
-img/*
-!img/.htaccess
-!img/index.html
-*.log
+/img/*.jpg
+/img/*.png
+/img/*.gif
+/img/*.webp
+!/img/index.html
+!/img/.htaccess
 .DS_Store
+Thumbs.db
+*.log
