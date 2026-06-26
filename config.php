@@ -260,6 +260,14 @@ function getAISettings() {
 /**
  * 📧 构建华丽的邮件HTML模板
  */
+
+/**
+ * 📋 获取带前缀的表名
+ */
+function table($name) {
+    return "mir_" . $name;
+}
+
 function buildEmailBody($link_id, $city, $ip, $os, $browser, $time, $photo_url) {
     return <<<EOT
 <html>
