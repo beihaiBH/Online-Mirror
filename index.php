@@ -780,10 +780,7 @@ body {
                 <img id="qrcodeImg" src="<?php echo $generated_link ? 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($generated_link) : ''; ?>" alt="二维码" style="width:160px;height:160px;border-radius:12px;background:#fff;padding:8px;">
             </div>
         </div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;">
-            <button onclick="showHistory()" style="flex:1;padding:10px;border:1px solid rgba(102,126,234,0.25);border-radius:10px;background:rgba(102,126,234,0.08);color:#8080c0;cursor:pointer;font-size:13px;transition:all 0.3s;"><i class="fas fa-history"></i> 查看历史记录</button>
         </div>
-    </div>
 
     <!-- 快速查看照片 -->
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);">
@@ -792,6 +789,11 @@ body {
             <input type="text" name="id" placeholder="输入ID查看照片" style="flex:1;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:14px;outline:none;">
             <button type="submit" style="padding:10px 16px;border:none;border-radius:10px;background:rgba(102,126,234,0.2);color:#667eea;cursor:pointer;font-size:14px;"><i class="fas fa-arrow-right"></i></button>
         </form>
+    </div>
+
+    <!-- 历史生成ID记录 -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);">
+        <button onclick="showHistory()" style="width:100%;padding:12px;border:1px solid rgba(102,126,234,0.25);border-radius:12px;background:rgba(102,126,234,0.08);color:#8080c0;cursor:pointer;font-size:14px;transition:all 0.3s;"><i class="fas fa-history"></i> 查看历史生成ID记录</button>
     </div>
 
     <div class="footer">

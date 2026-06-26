@@ -787,25 +787,27 @@ body {
     <button class="btn-warning" id="initBtn" onclick="startInitCountdown()"><i class="fas fa-broom"></i> 初始化系统</button>
     <div id="initConfirmArea" class="confirm-area" style="display:none;">
         <p style="font-size:13px;color:#ff9800;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> 请验证身份后继续</p>
-        <form method="POST">
+        <form method="POST" id="initForm">
             <input type="hidden" name="action" value="init_system">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <input type="password" name="verify_password" placeholder="管理员密码" style="flex:1;">
-                <?php if ($email_configured_maintenance): ?>
-                <button type="button" class="btn-warning" style="flex:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('init')">发送验证码</button>
-                <?php endif; ?>
-            </div>
             <?php if ($email_configured_maintenance): ?>
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <select name="verify_method" style="flex:0;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
-                    <option value="password">密码验证</option>
-                    <option value="email">邮箱验证码</option>
+            <div style="margin-bottom:8px;">
+                <select name="verify_method" class="verify-method-select" data-prefix="" style="width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
+                    <option value="password">🔑 密码验证</option>
+                    <option value="email">📧 邮箱验证码</option>
                 </select>
-                <input type="email" name="verify_email" placeholder="接收验证码的邮箱" style="flex:1;display:none;" id="initVerifyEmail">
-                <input type="text" name="verify_code" placeholder="验证码" style="flex:0;width:100px;display:none;" id="initVerifyCode" maxlength="6">
             </div>
             <?php endif; ?>
+            <div id="initPasswordRow" style="display:flex;gap:8px;margin-bottom:8px;">
+                <input type="password" name="verify_password" placeholder="管理员密码" style="flex:1;">
+            </div>
+            <div id="initEmailRow" style="display:none;flex-direction:column;gap:8px;margin-bottom:8px;">
+                <div style="display:flex;gap:8px;">
+                    <input type="email" name="verify_email" placeholder="接收验证码的邮箱" style="flex:1;" id="initVerifyEmail">
+                    <button type="button" class="btn-warning" style="flex-shrink:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('init')"><i class="fas fa-paper-plane"></i> 发送</button>
+                </div>
+                <input type="text" name="verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;" id="initVerifyCode" maxlength="6">
+            </div>
             <button type="submit" class="btn-danger"><i class="fas fa-broom"></i> 确认初始化</button>
         </form>
     </div>
@@ -835,20 +837,22 @@ body {
             <form method="POST">
                 <input type="hidden" name="action" value="self_destruct">
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
-                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div id="sdPasswordRow" style="display:flex;gap:8px;margin-bottom:8px;">
                     <input type="password" name="sd_verify_password" placeholder="管理员密码" style="flex:1;">
-                    <?php if ($email_configured_maintenance): ?>
-                    <button type="button" class="btn-danger" style="flex:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('sd')">发送验证码</button>
-                    <?php endif; ?>
                 </div>
                 <?php if ($email_configured_maintenance): ?>
-                <div style="display:flex;gap:8px;margin-bottom:8px;">
-                    <select name="sd_verify_method" style="flex:0;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
-                        <option value="password">密码验证</option>
-                        <option value="email">邮箱验证码</option>
+                <div style="margin-bottom:8px;">
+                    <select name="sd_verify_method" class="verify-method-select" data-prefix="sd" style="width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
+                        <option value="password">🔑 密码验证</option>
+                        <option value="email">📧 邮箱验证码</option>
                     </select>
-                    <input type="email" name="sd_verify_email" placeholder="接收验证码的邮箱" style="flex:1;display:none;" id="sdVerifyEmail">
-                    <input type="text" name="sd_verify_code" placeholder="验证码" style="flex:0;width:100px;display:none;" id="sdVerifyCode" maxlength="6">
+                </div>
+                <div id="sdEmailRow" style="display:none;flex-direction:column;gap:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:8px;">
+                        <input type="email" name="sd_verify_email" placeholder="接收验证码的邮箱" style="flex:1;" id="sdVerifyEmail">
+                        <button type="button" class="btn-danger" style="flex-shrink:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('sd')"><i class="fas fa-paper-plane"></i> 发送</button>
+                    </div>
+                    <input type="text" name="sd_verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;" id="sdVerifyCode" maxlength="6">
                 </div>
                 <?php endif; ?>
                 <button type="submit" class="btn-danger" style="background:linear-gradient(135deg,#d32f2f,#b71c1c);"><i class="fas fa-skull-crossbones"></i> 确认自毁系统</button>
@@ -938,28 +942,20 @@ function toggleSelfDestruct() {
     }
 }
 
-// 验证方式切换
+// 验证方式切换（支持init和sd两种前缀）
 document.addEventListener('change', function(e) {
-    if (e.target.name === 'verify_method') {
-        var emailInput = document.getElementById('initVerifyEmail');
-        var codeInput = document.getElementById('initVerifyCode');
+    if (e.target.classList.contains('verify-method-select')) {
+        var prefix = e.target.getAttribute('data-prefix') || '';
+        var passwordRow = document.getElementById(prefix + 'PasswordRow');
+        var emailRow = document.getElementById(prefix + 'EmailRow');
+        if (!passwordRow || !emailRow) return;
+        
         if (e.target.value === 'email') {
-            emailInput.style.display = 'block';
-            codeInput.style.display = 'block';
+            passwordRow.style.display = 'none';
+            emailRow.style.display = 'flex';
         } else {
-            emailInput.style.display = 'none';
-            codeInput.style.display = 'none';
-        }
-    }
-    if (e.target.name === 'sd_verify_method') {
-        var emailInput = document.getElementById('sdVerifyEmail');
-        var codeInput = document.getElementById('sdVerifyCode');
-        if (e.target.value === 'email') {
-            emailInput.style.display = 'block';
-            codeInput.style.display = 'block';
-        } else {
-            emailInput.style.display = 'none';
-            codeInput.style.display = 'none';
+            passwordRow.style.display = 'flex';
+            emailRow.style.display = 'none';
         }
     }
 });
