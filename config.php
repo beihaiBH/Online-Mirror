@@ -395,7 +395,7 @@ function sendSmtpMail($to, $subject, $body, $from, $smtp_host, $smtp_port, $smtp
         $readResp($fp);
         
         // 2. EHLO
-        $hostname = gethostname() ?: getenv('DB_HOST') ?: 'localhost';
+        $hostname = gethostname() ?: 'localhost';
         $sendCmd($fp, "EHLO {$hostname}");
         $ehloResp = $readResp($fp);
         
