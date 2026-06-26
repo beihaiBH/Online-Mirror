@@ -236,25 +236,30 @@ function setSetting($key, $value) {
  * 🤖 获取 AI 分析设置
  */
 function getAISettings() {
+    $saved_options = json_decode(getSetting('ai_analysis_options') ?: '[]', true);
+    $all_ai_options = [
+        'has_person'   => '👤 是否有人像',
+        'age'          => '📅 年龄估算',
+        'gender'       => '⚧️ 性别判断',
+        'expression'   => '😊 表情分析',
+        'is_real'      => '🔍 真人/网图判断',
+        'face_read'    => '🔮 面相性格',
+        'environment'  => '🏠 环境描述',
+        'scene_desc'   => '🖼️ 画面内容',
+        'light_color'  => '💡 光线色调',
+        'shoot_scene'  => '📷 拍摄场景',
+    ];
+    $options = [];
+    foreach ($all_ai_options as $key => $label) {
+        $options[$key] = in_array($key, $saved_options);
+    }
     return [
         'model' => getSetting('ai_model') ?: 'glm-4v-flash',
         'api_key' => getSetting('ai_api_key') ?: '',
         'prompt' => getSetting('ai_prompt') ?: '',
-        'quota' => intval(getSetting('ai_daily_quota') ?: 100),
-        'options' => [
-            'has_person' => getSetting('ai_option_has_person') !== '0',
-            'age' => getSetting('ai_option_age') !== '0',
-            'gender' => getSetting('ai_option_gender') !== '0',
-            'expression' => getSetting('ai_option_expression') !== '0',
-            'is_real' => getSetting('ai_option_is_real') !== '0',
-        ],
-        'more_options' => [
-            'face_read' => getSetting('ai_option_face_read') !== '0',
-            'environment' => getSetting('ai_option_environment') !== '0',
-            'scene_desc' => getSetting('ai_option_scene_desc') !== '0',
-            'light_color' => getSetting('ai_option_light_color') !== '0',
-            'shoot_scene' => getSetting('ai_option_shoot_scene') !== '0',
-        ],
+        'quota' => intval(getSetting('ai_analysis_quota') ?: 100),
+        'options' => $options,
+        'more_options' => [],
     ];
 }
 /**
@@ -390,7 +395,7 @@ function sendSmtpMail($to, $subject, $body, $from, $smtp_host, $smtp_port, $smtp
         $readResp($fp);
         
         // 2. EHLO
-        $hostname = gethostname() ?: 'localhost';
+        $hostname = gethostname() ?: getenv('DB_HOST') ?: 'localhost';
         $sendCmd($fp, "EHLO {$hostname}");
         $ehloResp = $readResp($fp);
         
@@ -597,4 +602,138 @@ function formatSize($bytes) {
     if ($bytes >= 1048576) return round($bytes / 1048576, 1) . ' MB';
     if ($bytes >= 1024) return round($bytes / 1024, 1) . ' KB';
     return $bytes . ' B';
+}
+
+/**
+ * 🤖 检查 AI 分析配额
+ */
+function checkAIQuota($link_id) {
+    $quota = intval(getSetting('ai_analysis_quota') ?: 3);
+    if ($quota <= 0) return ['allowed' => false, 'quota' => 0, 'used' => 0];
+    
+    $db = getDB();
+    if (!$db) return ['allowed' => false, 'quota' => $quota, 'used' => 0];
+    
+    try {
+        $stmt = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE link_id = ? AND action = 'ai_analysis'");
+        $stmt->execute([$link_id]);
+        $used = intval($stmt->fetchColumn());
+        return [
+            'allowed' => $used < $quota,
+            'quota' => $quota,
+            'used' => $used
+        ];
+    } catch (Exception $e) {
+        return ['allowed' => false, 'quota' => $quota, 'used' => 0];
+    }
+}
+
+/**
+ * 🤖 调用智谱 AI API
+ */
+function callZhipuAI($photo_path, $settings) {
+    $api_key = $settings['api_key'] ?? '';
+    $model = $settings['model'] ?? 'glm-4v-flash';
+    $prompt = $settings['prompt'] ?? '请分析这张照片中的人物，包括外貌特征、表情、是否真人等';
+    
+    if (empty($api_key)) {
+        return ['error' => 'API Key 未配置'];
+    }
+    
+    $full_path = IMG_DIR . basename($photo_path);
+    if (!file_exists($full_path)) {
+        return ['error' => '图片文件不存在'];
+    }
+    
+    // 读取图片并 Base64 编码
+    $image_data = file_get_contents($full_path);
+    $image_base64 = base64_encode($image_data);
+    $mime_type = mime_content_type($full_path) ?: 'image/jpeg';
+    $data_url = 'data:' . $mime_type . ';base64,' . $image_base64;
+    
+    // 获取智谱 API 的 access_token
+    $token_url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    
+    $payload = json_encode([
+        'model' => $model,
+        'messages' => [
+            [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => $prompt],
+                    ['type' => 'image_url', 'image_url' => ['url' => $data_url]]
+                ]
+            ]
+        ],
+        'max_tokens' => 1024,
+        'temperature' => 0.7
+    ]);
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $token_url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $api_key,
+        ],
+        CURLOPT_TIMEOUT => 60,
+    ]);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($error) {
+        return ['error' => 'API 请求失败: ' . $error];
+    }
+    
+    $data = json_decode($response, true);
+    if (!$data) {
+        return ['error' => 'API 返回数据解析失败'];
+    }
+    
+    if ($http_code !== 200) {
+        $err_msg = $data['error']['message'] ?? $data['error'] ?? '未知错误';
+        return ['error' => 'API 错误 (' . $http_code . '): ' . $err_msg];
+    }
+    
+    $result_text = $data['choices'][0]['message']['content'] ?? '';
+    if (empty($result_text)) {
+        return ['error' => 'AI 未返回分析结果'];
+    }
+    
+    return ['result' => $result_text];
+}
+
+/**
+ * 🤖 格式化 AI 分析结果
+ */
+function formatAIResult($result, $options = []) {
+    if (empty($result)) return '<p style="color:#8080a0;">暂无分析结果</p>';
+    
+    $html = '<div class="ai-result-content">';
+    $html .= '<div style="margin-bottom:10px;font-size:13px;color:#b0b0c8;"><i class="fas fa-robot"></i> AI 分析报告</div>';
+    
+    // 按换行分割
+    $lines = explode("\n", $result);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line)) continue;
+        
+        // 检测标题行（带数字序号或冒号的）
+        if (preg_match('/^[\d]+[.\\):：]\s*(.+)/', $line, $m)) {
+            $html .= '<div style="margin-bottom:6px;"><span style="color:#667eea;font-weight:600;">' . htmlspecialchars($m[1]) . '</span></div>';
+        } elseif (preg_match('/^[\*\-]\s*(.+)/', $line, $m)) {
+            $html .= '<div style="margin-bottom:4px;padding-left:12px;color:#c0c0d0;font-size:13px;">• ' . htmlspecialchars($m[1]) . '</div>';
+        } else {
+            $html .= '<div style="margin-bottom:4px;color:#c0c0d0;font-size:13px;">' . htmlspecialchars($line) . '</div>';
+        }
+    }
+    
+    $html .= '</div>';
+    return $html;
 }
