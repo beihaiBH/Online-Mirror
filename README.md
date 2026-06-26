@@ -23,11 +23,11 @@
   <tr>
     <td align="center" width="50%">
       <img src="screenshots/preview-portrait-1.jpg" width="240" alt="首页">
-      <br><sub>🏠 首页 - 链接生成器</sub>
+      <br><sub>📸 拍照 & 信息采集</sub>
     </td>
     <td align="center" width="50%">
       <img src="screenshots/preview-portrait-2.jpg" width="240" alt="拍照页面">
-      <br><sub>📸 拍照 & 信息采集</sub>
+      <br><sub>🏠 首页 - 链接生成器</sub>
     </td>
   </tr>
 </table>
