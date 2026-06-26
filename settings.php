@@ -506,6 +506,61 @@ body {
     .box { padding:20px 16px; }
     .option-grid { grid-template-columns: 1fr 1fr; }
 }
+/* ========== 🎬 动画 ========== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
+    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+}
+
+.container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
+.stats-grid, .section-title, .tab-nav { animation: fadeInUp 0.5s ease-out; }
+.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+.stat-card:nth-child(5) { animation-delay: 0.25s; }
+.stat-card:nth-child(6) { animation-delay: 0.3s; }
+.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.btn-save, .btn-login, .btn-danger, .btn-warning,
+.load-more-btn, .export-btn, .refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
+.load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+}
+.toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.toggle:hover { transform: scale(1.05); }
+.toggle .knob { transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
+.toggle-field { animation: slideDown 0.3s ease-out; }
+.modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
+table tr { transition: background 0.2s; }
+table tr:hover td { background: rgba(102,126,234,0.05) !important; }
+.tag { transition: all 0.2s; }
+.tag:hover { transform: translateY(-1px); }
+.footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.footer .social-links a:hover { transform: translateY(-2px); }
+.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 </style>
 </head>
 <body>
@@ -792,7 +847,7 @@ body {
             <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
             <?php if ($email_configured_maintenance): ?>
             <div style="margin-bottom:8px;">
-                <select name="verify_method" class="verify-method-select" data-prefix="" style="width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
+                <select name="verify_method" class="verify-method-select" data-prefix="init" style="width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:13px;outline:none;">
                     <option value="password">🔑 密码验证</option>
                     <option value="email">📧 邮箱验证码</option>
                 </select>
@@ -802,11 +857,14 @@ body {
                 <input type="password" name="verify_password" placeholder="管理员密码" style="flex:1;">
             </div>
             <div id="initEmailRow" style="display:none;flex-direction:column;gap:8px;margin-bottom:8px;">
-                <div style="display:flex;gap:8px;">
-                    <input type="email" name="verify_email" placeholder="接收验证码的邮箱" style="flex:1;" id="initVerifyEmail">
-                    <button type="button" class="btn-warning" style="flex-shrink:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('init')"><i class="fas fa-paper-plane"></i> 发送</button>
+                <?php if (!$email_configured_maintenance): ?>
+                <p style="font-size:12px;color:#8080a0;"><i class="fas fa-info-circle"></i> 邮箱验证码功能需要先在「邮箱通知」TAB中配置SMTP发件服务</p>
+                <?php endif; ?>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="email" name="verify_email" placeholder="接收验证码的邮箱" style="flex:1;padding:12px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.08);color:#e0e0e0;font-size:14px;outline:none;" id="initVerifyEmail">
+                    <button type="button" class="btn-warning" style="width:auto;flex-shrink:0;padding:8px 12px;font-size:12px;white-space:nowrap;margin-top:0;border:none;border-radius:8px;background:rgba(255,152,0,0.15);color:#ff9800;cursor:pointer;" onclick="sendMaintenanceVcode('init')"><i class="fas fa-paper-plane"></i> 发送</button>
                 </div>
-                <input type="text" name="verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;" id="initVerifyCode" maxlength="6">
+                <input type="text" name="verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.08);color:#e0e0e0;font-size:14px;outline:none;" id="initVerifyCode" maxlength="6">
             </div>
             <button type="submit" class="btn-danger"><i class="fas fa-broom"></i> 确认初始化</button>
         </form>
@@ -848,11 +906,11 @@ body {
                     </select>
                 </div>
                 <div id="sdEmailRow" style="display:none;flex-direction:column;gap:8px;margin-bottom:8px;">
-                    <div style="display:flex;gap:8px;">
-                        <input type="email" name="sd_verify_email" placeholder="接收验证码的邮箱" style="flex:1;" id="sdVerifyEmail">
-                        <button type="button" class="btn-danger" style="flex-shrink:0;padding:10px 14px;font-size:12px;" onclick="sendMaintenanceVcode('sd')"><i class="fas fa-paper-plane"></i> 发送</button>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="email" name="sd_verify_email" placeholder="接收验证码的邮箱" style="flex:1;padding:12px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.08);color:#e0e0e0;font-size:14px;outline:none;" id="sdVerifyEmail">
+                        <button type="button" class="btn-danger" style="width:auto;flex-shrink:0;padding:8px 12px;font-size:12px;white-space:nowrap;margin-top:0;border:none;border-radius:8px;background:rgba(255,80,80,0.15);color:#ff6b6b;cursor:pointer;" onclick="sendMaintenanceVcode('sd')"><i class="fas fa-paper-plane"></i> 发送</button>
                     </div>
-                    <input type="text" name="sd_verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;" id="sdVerifyCode" maxlength="6">
+                    <input type="text" name="sd_verify_code" placeholder="输入6位验证码" style="width:100%;max-width:200px;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.08);color:#e0e0e0;font-size:14px;outline:none;" id="sdVerifyCode" maxlength="6">
                 </div>
                 <?php endif; ?>
                 <button type="submit" class="btn-danger" style="background:linear-gradient(135deg,#d32f2f,#b71c1c);"><i class="fas fa-skull-crossbones"></i> 确认自毁系统</button>
@@ -867,7 +925,7 @@ function sendMaintenanceVcode(prefix) {
     var emailInput = document.getElementById(prefix + 'VerifyEmail');
     var email = emailInput ? emailInput.value.trim() : '';
     if (!email) { alert('请输入邮箱地址'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+    if (!/@/.test(email) || email.indexOf('.') === -1) { alert('邮箱格式不正确'); return; }
     
     var formData = new FormData();
     formData.append('action', 'send_vcode');

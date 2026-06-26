@@ -535,6 +535,68 @@ body {
     .container { padding: 24px 16px; }
     .logo h1 { font-size: 22px; }
 }
+
+/* ========== 🎬 动画 ========== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
+    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.container { animation: fadeInUp 0.5s ease-out; }
+.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+.result-box { animation: fadeInUp 0.4s ease-out; }
+
+.btn-generate { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); animation: pulse 1.5s infinite; }
+.btn-generate:active { transform: translateY(0); }
+
+.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+
+.toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.toggle:hover { transform: scale(1.05); }
+.toggle .knob { transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
+
+.toggle-field { animation: slideDown 0.3s ease-out; }
+
+.footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.footer .social-links a:hover { transform: translateY(-2px); }
+
+.dev-modal .modal-box { animation: fadeInUp 0.3s ease-out; }
+.dev-modal.show .modal-box { animation: fadeInUp 0.3s ease-out; }
+
+.result-box .link-display button { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.result-box .link-display button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+
+.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 </style>
 </head>
 <body>
@@ -709,6 +771,9 @@ body {
                 </button>
             </div>
             <div class="toggle-field" id="toggleRecordingField">
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.15);font-size:12px;color:#ffa726;margin-bottom:10px;">
+                    <i class="fas fa-exclamation-triangle"></i> 开启后对方打开链接时浏览器可能会弹出麦克风授权提示，请谨慎使用
+                </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <select name="recording_seconds" style="width:100%;padding:12px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:15px;outline:none;">
                         <option value="3">3 秒</option>

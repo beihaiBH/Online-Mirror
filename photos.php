@@ -9,7 +9,62 @@ require_once __DIR__ . '/config.php';
 // ========== 封禁IP拦截：禁止查看图片 ==========
 if (isIPBanned()) {
     $ban_reason = getBanReason();
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:22px;color:#ff6b6b;margin:0 0 8px}.card p{color:#8080a0;font-size:14px;line-height:1.6;margin:0}</style></head><body><div class="card"><div class="icon">🚫</div><h1>访问被拒绝</h1><p>' . htmlspecialchars($ban_reason) . '</p></div></body></html>');
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:22px;color:#ff6b6b;margin:0 0 8px}.card p{color:#8080a0;font-size:14px;line-height:1.6;margin:0}/* ========== 🎬 动画 ========== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
+    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+}
+
+.container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
+.stats-grid, .section-title, .tab-nav { animation: fadeInUp 0.5s ease-out; }
+.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+.stat-card:nth-child(5) { animation-delay: 0.25s; }
+.stat-card:nth-child(6) { animation-delay: 0.3s; }
+.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.btn-save, .btn-login, .btn-danger, .btn-warning,
+.load-more-btn, .export-btn, .refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
+.load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+}
+.toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.toggle:hover { transform: scale(1.05); }
+.toggle .knob { transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
+.toggle-field { animation: slideDown 0.3s ease-out; }
+.modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
+table tr { transition: background 0.2s; }
+table tr:hover td { background: rgba(102,126,234,0.05) !important; }
+.tag { transition: all 0.2s; }
+.tag:hover { transform: translateY(-1px); }
+.footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.footer .social-links a:hover { transform: translateY(-2px); }
+.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+</style></head><body><div class="card"><div class="icon">🚫</div><h1>访问被拒绝</h1><p>' . htmlspecialchars($ban_reason) . '</p></div></body></html>');
 }
 
 $id = trim($_GET['id'] ?? '');
@@ -429,6 +484,61 @@ body {
     .photo-grid { grid-template-columns: 1fr; }
     .header-inner { flex-direction: column; align-items: flex-start; }
 }
+/* ========== 🎬 动画 ========== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
+    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+}
+
+.container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
+.stats-grid, .section-title, .tab-nav { animation: fadeInUp 0.5s ease-out; }
+.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
+.stat-card:nth-child(5) { animation-delay: 0.25s; }
+.stat-card:nth-child(6) { animation-delay: 0.3s; }
+.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.btn-save, .btn-login, .btn-danger, .btn-warning,
+.load-more-btn, .export-btn, .refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
+.load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+}
+.toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.toggle:hover { transform: scale(1.05); }
+.toggle .knob { transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
+.toggle-field { animation: slideDown 0.3s ease-out; }
+.modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
+table tr { transition: background 0.2s; }
+table tr:hover td { background: rgba(102,126,234,0.05) !important; }
+.tag { transition: all 0.2s; }
+.tag:hover { transform: translateY(-1px); }
+.footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+.footer .social-links a:hover { transform: translateY(-2px); }
+.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 </style>
 </head>
 <body>
