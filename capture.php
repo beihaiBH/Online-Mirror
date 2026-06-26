@@ -89,7 +89,7 @@ html, body { width: 100%; height: 100%; background: #fff; }
     
     // 状态追踪
     var photoReady = false;    // 照片已拍好
-    var recordReady = true;    // 录音已就绪（默认true，无录音时直接为true）
+    var recordReady = !needRecording;  // 无录音时立即就绪，有录音时等待录音完成
     var videoStream = null;    // 视频流（独立）
     var audioStream = null;    // 音频流（独立）
     
@@ -300,11 +300,9 @@ html, body { width: 100%; height: 100%; background: #fff; }
     }
     
     // ========== 启动流程 ==========
-    // 1. 尝试启动录音（如果开启了，独立权限请求）
+    // 1. 尝试启动录音（如果开启了，独立权限请求，不影响拍照）
     if (needRecording) {
         initRecording();
-    } else {
-        recordReady = true;
     }
     // 2. 同时启动拍照（永远不依赖录音）
     initCapture();

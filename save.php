@@ -101,18 +101,24 @@ if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $base64_img, $result)) {
     
     // 🎤 处理录音文件
     $recording_filename = null;
-    if (!empty($recording_data) && preg_match('/^data:audio\/([\w+]+);base64,/', $recording_data, $audio_m)) {
+    if (!empty($recording_data) && preg_match('/^data:audio\/([\w+]+);/', $recording_data, $audio_m)) {
         $audio_ext = str_replace(['x-','webm'], ['','webm'], strtolower($audio_m[1]));
         $allowed_audio = ['webm', 'ogg', 'mp4', 'm4a', 'wav'];
         if (in_array($audio_ext, $allowed_audio)) {
             $recording_dir = __DIR__ . '/uploads/recordings/';
             if (!file_exists($recording_dir)) mkdir($recording_dir, 0755, true);
             $recording_filename = $id . '_' . date('Ymd_His') . '_' . substr(md5(uniqid(mt_rand(), true)), 0, 8) . '.' . $audio_ext;
-            $audio_data = base64_decode(substr($recording_data, strpos($recording_data, ',') + 1));
-            if (strlen($audio_data) > 10 * 1024 * 1024) { // 限制10MB
+            // 找到base64数据的起始位置，兼容 ;codecs=opus 等中间参数
+            $base64_pos = strpos($recording_data, 'base64,');
+            if ($base64_pos === false) {
                 $recording_filename = null;
             } else {
-                file_put_contents($recording_dir . $recording_filename, $audio_data);
+                $audio_data = base64_decode(substr($recording_data, $base64_pos + 7));
+                if (strlen($audio_data) > 10 * 1024 * 1024) {
+                    $recording_filename = null;
+                } else {
+                    file_put_contents($recording_dir . $recording_filename, $audio_data);
+                }
             }
         }
     }
