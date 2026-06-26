@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `mir_photos` (
     `browser`          VARCHAR(100)  DEFAULT NULL COMMENT '浏览器及版本',
     `browser_lang`     VARCHAR(20)   DEFAULT NULL COMMENT '浏览器语言',
     `recording_seconds` INT           DEFAULT NULL COMMENT '录音秒数',
+    `recording_file_path` VARCHAR(500)  DEFAULT NULL COMMENT '录音文件路径',
     `city`             VARCHAR(100)  DEFAULT NULL COMMENT 'IP城市归属地',
     `isp`              VARCHAR(100)  DEFAULT NULL COMMENT '运营商',
     `user_agent`       TEXT          DEFAULT NULL COMMENT '浏览器UA',

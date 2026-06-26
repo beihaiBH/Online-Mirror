@@ -520,6 +520,9 @@ body {
                 <?php if ($photo['screen_resolution']): ?><span class="tag"><i class="fas fa-expand"></i> <?php echo htmlspecialchars($photo['screen_resolution']); ?></span><?php endif; ?>
                 <?php if ($photo['browser_lang']): ?><span class="tag"><i class="fas fa-language"></i> <?php echo htmlspecialchars($photo['browser_lang']); ?></span><?php endif; ?>
                 <?php if ($photo['recording_seconds'] > 0): ?><span class="tag"><i class="fas fa-microphone"></i> 录音 <?php echo intval($photo['recording_seconds']); ?>秒</span><?php endif; ?>
+                <?php if ($photo['recording_file_path']): ?>
+                <span class="tag"><i class="fas fa-play-circle"></i> <audio controls preload="none" style="height:28px;width:160px;vertical-align:middle;filter:invert(0.85);" src="uploads/recordings/<?php echo htmlspecialchars($photo['recording_file_path']); ?>"></audio></span>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
             
