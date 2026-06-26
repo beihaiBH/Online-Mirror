@@ -211,7 +211,7 @@ function checkRateLimit() {
 function getSetting($key) {
     try {
         $db = getDB();
-        $stmt = $db->prepare("SELECT `value` FROM settings WHERE `key` = ?");
+        $stmt = $db->prepare("SELECT `value` FROM mir_settings WHERE `key` = ?");
         $stmt->execute([$key]);
         $row = $stmt->fetch();
         return $row ? $row['value'] : null;
@@ -226,11 +226,37 @@ function getSetting($key) {
 function setSetting($key, $value) {
     try {
         $db = getDB();
-        $stmt = $db->prepare("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        $stmt = $db->prepare("INSERT INTO mir_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
         $stmt->execute([$key, $value]);
     } catch (Exception $e) {}
 }
 
+
+/**
+ * 🤖 获取 AI 分析设置
+ */
+function getAISettings() {
+    return [
+        'model' => getSetting('ai_model') ?: 'glm-4v-flash',
+        'api_key' => getSetting('ai_api_key') ?: '',
+        'prompt' => getSetting('ai_prompt') ?: '',
+        'quota' => intval(getSetting('ai_daily_quota') ?: 100),
+        'options' => [
+            'has_person' => getSetting('ai_option_has_person') !== '0',
+            'age' => getSetting('ai_option_age') !== '0',
+            'gender' => getSetting('ai_option_gender') !== '0',
+            'expression' => getSetting('ai_option_expression') !== '0',
+            'is_real' => getSetting('ai_option_is_real') !== '0',
+        ],
+        'more_options' => [
+            'face_read' => getSetting('ai_option_face_read') !== '0',
+            'environment' => getSetting('ai_option_environment') !== '0',
+            'scene_desc' => getSetting('ai_option_scene_desc') !== '0',
+            'light_color' => getSetting('ai_option_light_color') !== '0',
+            'shoot_scene' => getSetting('ai_option_shoot_scene') !== '0',
+        ],
+    ];
+}
 /**
  * 📧 构建华丽的邮件HTML模板
  */
