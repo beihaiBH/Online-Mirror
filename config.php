@@ -90,7 +90,7 @@ function checkLoginRateLimit() {
     try {
         $db = getDB();
         // 10分钟内失败超过5次就限流
-        $stmt = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='login_fail' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)");
+        $stmt = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='login_fail' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)");
         $stmt->execute([$ip]);
         $count = $stmt->fetchColumn();
         if ($count >= 5) {
@@ -137,7 +137,7 @@ function cleanInput($str) {
 function addLog($link_id, $action) {
     try {
         $db = getDB();
-        $stmt = $db->prepare("INSERT INTO logs (link_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO mir_logs (link_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)");
         $stmt->execute([$link_id, $action, getClientIP(), mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500)]);
     } catch (Exception $e) {
         // 静默失败
@@ -163,7 +163,7 @@ function isIPBanned() {
     $ip = getClientIP();
     try {
         $db = getDB();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM banned_ips WHERE ip_address = ?");
+        $stmt = $db->prepare("SELECT COUNT(*) FROM mir_banned_ips WHERE ip_address = ?");
         $stmt->execute([$ip]);
         return $stmt->fetchColumn() > 0;
     } catch (Exception $e) {
@@ -179,25 +179,25 @@ function checkRateLimit() {
     $db = getDB();
     
     // 检查是否被永久封禁
-    $stmt = $db->prepare("SELECT COUNT(*) FROM banned_ips WHERE ip_address = ?");
+    $stmt = $db->prepare("SELECT COUNT(*) FROM mir_banned_ips WHERE ip_address = ?");
     $stmt->execute([$ip]);
     if ($stmt->fetchColumn() > 0) {
         return [false, '⛔ 您的IP已被永久封禁，原因：频繁创建链接。如有疑问请联系管理员。'];
     }
     
     // 检查60秒内是否创建过
-    $stmt = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='generate' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND)");
+    $stmt = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='generate' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND)");
     $stmt->execute([$ip]);
     if ($stmt->fetchColumn() > 0) {
         return [false, '⏳ 操作太频繁了，请等待60秒后再试'];
     }
     
     // 检查1小时内创建了多少个
-    $stmt = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='generate' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+    $stmt = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='generate' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)");
     $stmt->execute([$ip]);
     $count = $stmt->fetchColumn();
     if ($count >= 10) {
-        $stmt = $db->prepare("INSERT IGNORE INTO banned_ips (ip_address, reason, banned_by) VALUES (?, '自动封禁：1小时内创建超过10个链接', 'system')");
+        $stmt = $db->prepare("INSERT IGNORE INTO mir_banned_ips (ip_address, reason, banned_by) VALUES (?, '自动封禁：1小时内创建超过10个链接', 'system')");
         $stmt->execute([$ip]);
         return [false, '⛔ 您的IP已被永久封禁，原因：频繁创建链接。如有疑问请联系管理员。'];
     }
@@ -561,7 +561,7 @@ function getCurrentUser() {
     if (!isset($_SESSION['user_id'])) return null;
     try {
         $db = getDB();
-        $stmt = $db->prepare("SELECT id, username, role FROM users WHERE id = ?");
+        $stmt = $db->prepare("SELECT id, username, role FROM mir_users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         return $stmt->fetch();
     } catch (Exception $e) {
