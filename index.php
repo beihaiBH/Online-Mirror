@@ -359,6 +359,85 @@ body {
     background:rgba(102,126,234,0.2);
 }
 
+/* ====== 滑动验证码 ====== */
+.slide-captcha {
+    margin-bottom: 14px;
+    text-align: left;
+}
+.slide-captcha .sc-label {
+    display: block;
+    font-size: 13px;
+    color: #b0b0c8;
+    margin-bottom: 4px;
+}
+.slide-captcha .sc-track {
+    position: relative;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+}
+.slide-captcha .sc-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 12px;
+    transition: width 0.2s;
+    opacity: 0.6;
+}
+.slide-captcha .sc-thumb {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: grab;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: box-shadow 0.2s;
+}
+.slide-captcha .sc-thumb:active { cursor: grabbing; }
+.slide-captcha .sc-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #8080a0;
+    z-index: 1;
+    pointer-events: none;
+}
+.slide-captcha .sc-thumb.verified {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+}
+.slide-captcha .sc-track.verified {
+    border-color: #4caf50;
+}
+.slide-captcha .sc-track.verified .sc-fill {
+    background: linear-gradient(90deg, #4caf50, #2e7d32);
+    opacity: 1;
+}
+.slide-captcha input[type="hidden"] {
+    display: none;
+}
+
 /* 开发者弹窗 */
 .dev-modal {
     display:none;
@@ -660,6 +739,19 @@ body {
             </div>
             
         </div>
+        
+        <!-- 滑动验证 -->
+        <div class="slide-captcha">
+            <label class="sc-label"><i class="fas fa-shield-alt"></i> 安全验证</label>
+            <div class="sc-track" id="scTrack">
+                <div class="sc-fill" id="scFill"></div>
+                <div class="sc-thumb" id="scThumb" onmousedown="startDrag(event)" ontouchstart="startDragTouch(event)">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="sc-text" id="scText">请按住滑块拖动到最右侧</div>
+            </div>
+            <input type="hidden" name="slider_pass" id="sliderPass" value="0">
+        </div>
 
         <button type="submit" class="btn-generate">
             <i class="fas fa-magic"></i> 生成镜像链接
@@ -780,7 +872,10 @@ body {
             <p style="color:#606080;font-size:13px;">管理员暂未设置打赏方式</p>
             <?php endif; ?>
         </div>
-    <!-- 复制邮箱提示 -->
+    </div>
+</div>
+
+<!-- 复制邮箱提示 -->
 <div class="copy-toast" id="copyToast">✅ 邮箱已复制到剪贴板</div>
 
 <script>
@@ -824,12 +919,18 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('dev-modal')) { closeDev(); closeDonation(); }
 });
+</script>
 
 <script>
 function validateForm() {
     const url = document.getElementById('redirect_url').value.trim();
     if (!url) {
         showToast('请输入跳转地址！', false);
+        return false;
+    }
+    var sliderPass = document.getElementById('sliderPass').value;
+    if (sliderPass !== '1') {
+        showToast('请先完成滑块验证！', false);
         return false;
     }
     return true;
@@ -1015,6 +1116,7 @@ function toggleField(type) {
         'email': ['toggleEmailBtn', 'toggleEmailField'],
         'domain': ['toggleDomainBtn', 'toggleDomainField'],
         'burst': ['toggleBurstBtn', 'toggleBurstField'],
+        'recording': ['toggleRecordingBtn', 'toggleRecordingField'],
         'qrcode': ['toggleQrcodeBtn', 'showQrcodeInput'],
         'gps': ['toggleGpsBtn', 'toggleGpsField']
     };
@@ -1046,6 +1148,7 @@ function toggleField(type) {
     if (type === 'gps') {
         var gpsInput = document.getElementById('gpsEnabledInput');
         if (gpsInput) gpsInput.value = btn.classList.contains('on') ? '1' : '0';
+        return;
     }
     
     // 录音采样特殊处理
@@ -1102,6 +1205,121 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 <?php endif; ?>
+
+// ====== 滑动验证码（首页链接生成）======
+var scIsDragging = false;
+var scDragStartX = 0;
+var scCurrentX = 0;
+var scTrackWidth = 0;
+
+function startDrag(e) {
+    e.preventDefault();
+    var track = document.getElementById('scTrack');
+    if (track.classList.contains('verified')) return;
+    
+    scIsDragging = true;
+    scDragStartX = e.clientX;
+    var trackRect = track.getBoundingClientRect();
+    scTrackWidth = trackRect.width - 42;
+    scCurrentX = 0;
+    
+    document.addEventListener('mousemove', onScMove);
+    document.addEventListener('mouseup', onScEnd);
+}
+
+function startDragTouch(e) {
+    e.preventDefault();
+    var track = document.getElementById('scTrack');
+    if (track.classList.contains('verified')) return;
+    
+    scIsDragging = true;
+    var touch = e.touches[0];
+    scDragStartX = touch.clientX;
+    var trackRect = track.getBoundingClientRect();
+    scTrackWidth = trackRect.width - 42;
+    scCurrentX = 0;
+    
+    document.addEventListener('touchmove', onScMoveTouch, { passive: false });
+    document.addEventListener('touchend', onScEndTouch);
+}
+
+function onScMove(e) {
+    if (!scIsDragging) return;
+    e.preventDefault();
+    var dx = e.clientX - scDragStartX;
+    updateScPosition(dx);
+}
+
+function onScMoveTouch(e) {
+    if (!scIsDragging) return;
+    e.preventDefault();
+    var touch = e.touches[0];
+    var dx = touch.clientX - scDragStartX;
+    updateScPosition(dx);
+}
+
+function updateScPosition(dx) {
+    var pos = Math.max(0, Math.min(scTrackWidth, dx));
+    scCurrentX = pos;
+    
+    var thumb = document.getElementById('scThumb');
+    var fill = document.getElementById('scFill');
+    var text = document.getElementById('scText');
+    
+    thumb.style.left = (2 + pos) + 'px';
+    fill.style.width = (pos + 20) + 'px';
+    
+    var percent = pos / scTrackWidth;
+    if (percent > 0.9) {
+        text.textContent = '松开完成验证';
+    } else if (percent > 0.5) {
+        text.textContent = '继续向右拖动';
+    } else {
+        text.textContent = '请按住滑块拖动到最右侧';
+    }
+}
+
+function onScEnd() {
+    if (!scIsDragging) return;
+    scIsDragging = false;
+    document.removeEventListener('mousemove', onScMove);
+    document.removeEventListener('mouseup', onScEnd);
+    checkScComplete();
+}
+
+function onScEndTouch() {
+    if (!scIsDragging) return;
+    scIsDragging = false;
+    document.removeEventListener('touchmove', onScMoveTouch);
+    document.removeEventListener('touchend', onScEndTouch);
+    checkScComplete();
+}
+
+function checkScComplete() {
+    var threshold = scTrackWidth * 0.9;
+    
+    if (scCurrentX >= threshold) {
+        var track = document.getElementById('scTrack');
+        var thumb = document.getElementById('scThumb');
+        var fill = document.getElementById('scFill');
+        var text = document.getElementById('scText');
+        var input = document.getElementById('sliderPass');
+        
+        track.classList.add('verified');
+        thumb.classList.add('verified');
+        thumb.innerHTML = '<i class="fas fa-check"></i>';
+        text.textContent = '✓ 验证通过';
+        input.value = '1';
+    } else {
+        var thumb = document.getElementById('scThumb');
+        var fill = document.getElementById('scFill');
+        var text = document.getElementById('scText');
+        
+        thumb.style.left = '2px';
+        fill.style.width = '0';
+        text.textContent = '请按住滑块拖动到最右侧';
+    }
+}
 </script>
 </body>
 </html>

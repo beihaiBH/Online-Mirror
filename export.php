@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v2.0 - 数据导出
+ * Online-Mirror v3.0 - 数据导出
  * 功能：一键导出所有照片ZIP + 日志CSV
  */
 require_once __DIR__ . '/config.php';
@@ -43,7 +43,7 @@ if ($format === 'csv') {
     echo implode(',', array_map(function($h) { return '"' . str_replace('"', '""', $h) . '"'; }, $headers)) . "\n";
     
     // 查询所有照片数据
-    $stmt = $db->query("SELECT p.*, l.redirect_url FROM photos p LEFT JOIN links l ON p.link_id = l.link_id ORDER BY p.created_at DESC");
+    $stmt = $db->query("SELECT p.*, l.redirect_url FROM mir_photos p LEFT JOIN mir_links l ON p.link_id = l.link_id ORDER BY p.created_at DESC");
     $photos = $stmt->fetchAll();
     
     foreach ($photos as $p) {
@@ -70,7 +70,7 @@ if ($format === 'csv') {
     $log_headers = ['时间', '操作', '链接ID', 'IP地址', 'User-Agent'];
     echo implode(',', array_map(function($h) { return '"' . str_replace('"', '""', $h) . '"'; }, $log_headers)) . "\n";
     
-    $stmt = $db->query("SELECT * FROM logs ORDER BY created_at DESC");
+    $stmt = $db->query("SELECT * FROM mir_logs ORDER BY created_at DESC");
     $logs = $stmt->fetchAll();
     foreach ($logs as $l) {
         $row = [$l['created_at'], $l['action'], $l['link_id'] ?? '', $l['ip_address'] ?? '', $l['user_agent'] ?? ''];
@@ -87,7 +87,7 @@ if ($format === 'zip') {
     $photo_dir = $tmp_dir . '/photos';
     @mkdir($photo_dir, 0755, true);
     
-    $stmt = $db->query("SELECT * FROM photos ORDER BY link_id, created_at ASC");
+    $stmt = $db->query("SELECT * FROM mir_photos ORDER BY link_id, created_at ASC");
     $photos = $stmt->fetchAll();
     
     foreach ($photos as $p) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror 升级版 v2.0 - 管理后台
+ * Online-Mirror v3.0 - 管理后台
  * 功能：总览(趋势图+AJAX照片)、链接管理(含标签)、登录记录、封禁IP、数据导出
  */
 require_once __DIR__ . '/config.php';
@@ -14,22 +14,22 @@ $csrf = csrfToken();
 $tab = $_GET['tab'] ?? 'overview';
 
 // ========== 统计数据 ==========
-$total_links = $db->query("SELECT COUNT(*) FROM links")->fetchColumn();
-$total_photos = $db->query("SELECT COUNT(*) FROM photos")->fetchColumn();
-$total_views = $db->query("SELECT SUM(views) FROM links")->fetchColumn() ?: 0;
-$total_captures = $db->query("SELECT SUM(captures) FROM links")->fetchColumn() ?: 0;
+$total_links = $db->query("SELECT COUNT(*) FROM mir_links")->fetchColumn();
+$total_photos = $db->query("SELECT COUNT(*) FROM mir_photos")->fetchColumn();
+$total_views = $db->query("SELECT SUM(views) FROM mir_links")->fetchColumn() ?: 0;
+$total_captures = $db->query("SELECT SUM(captures) FROM mir_links")->fetchColumn() ?: 0;
 
 $today_start = date('Y-m-d 00:00:00');
-$today_photos = $db->prepare("SELECT COUNT(*) FROM photos WHERE created_at >= ?");
+$today_photos = $db->prepare("SELECT COUNT(*) FROM mir_photos WHERE created_at >= ?");
 $today_photos->execute([$today_start]);
 $today_photos = $today_photos->fetchColumn();
 
-$today_visits = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='visit' AND created_at >= ?");
+$today_visits = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='visit' AND created_at >= ?");
 $today_visits->execute([$today_start]);
 $today_visits = $today_visits->fetchColumn();
 
 // ========== 获取最近链接（含标签） ==========
-$stmt = $db->query("SELECT * FROM links ORDER BY created_at DESC LIMIT 30");
+$stmt = $db->query("SELECT * FROM mir_links ORDER BY created_at DESC LIMIT 30");
 $recent_links = $stmt->fetchAll();
 
 // ========== 更新标签 ==========
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $link_id = trim($_POST['link_id'] ?? '');
     $tags = trim($_POST['tags'] ?? '');
     $tags = mb_substr(strip_tags($tags), 0, 200);
-    $stmt = $db->prepare("UPDATE links SET tags = ? WHERE link_id = ?");
+    $stmt = $db->prepare("UPDATE mir_links SET tags = ? WHERE link_id = ?");
     $stmt->execute([$tags, $link_id]);
     header("Location: dashboard.php?tab=links");
     exit;
@@ -47,13 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // ========== 删除链接 ==========
 if (isset($_GET['delete_link']) && $user['role'] === 'admin') {
     $link_id = trim($_GET['delete_link']);
-    $stmt = $db->prepare("SELECT file_path FROM photos WHERE link_id = ?");
+    $stmt = $db->prepare("SELECT file_path FROM mir_photos WHERE link_id = ?");
     $stmt->execute([$link_id]);
     foreach ($stmt->fetchAll() as $p) {
         $fp = IMG_DIR . $p['file_path'];
         if (file_exists($fp)) unlink($fp);
     }
-    $stmt = $db->prepare("DELETE FROM links WHERE link_id = ?");
+    $stmt = $db->prepare("DELETE FROM mir_links WHERE link_id = ?");
     $stmt->execute([$link_id]);
     addLog($link_id, 'delete_link');
     header("Location: dashboard.php?tab=links");
@@ -63,35 +63,66 @@ if (isset($_GET['delete_link']) && $user['role'] === 'admin') {
 // ========== 解封IP ==========
 if (isset($_GET['unban_ip']) && $user['role'] === 'admin') {
     $ip = trim($_GET['unban_ip']);
-    $stmt = $db->prepare("DELETE FROM banned_ips WHERE ip_address = ?");
+    $stmt = $db->prepare("DELETE FROM mir_banned_ips WHERE ip_address = ?");
     $stmt->execute([$ip]);
     header("Location: dashboard.php?tab=banned");
     exit;
 }
 
+// ========== 手动封禁IP ==========
+$ban_error = '';
+$ban_success = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'ban_ip' && $user['role'] === 'admin') {
+    requireCsrf();
+    $ban_ip = trim($_POST['ban_ip'] ?? '');
+    $ban_reason = trim($_POST['ban_reason'] ?? '违规行为，系统已封禁');
+    if (empty($ban_reason)) $ban_reason = '违规行为，系统已封禁';
+    $ban_reason = mb_substr(strip_tags($ban_reason), 0, 200);
+    
+    if (empty($ban_ip)) {
+        $ban_error = '请输入IP地址';
+    } elseif (!filter_var($ban_ip, FILTER_VALIDATE_IP)) {
+        $ban_error = 'IP地址格式不正确';
+    } else {
+        // 检查是否已封禁
+        $stmt = $db->prepare("SELECT COUNT(*) FROM mir_banned_ips WHERE ip_address = ?");
+        $stmt->execute([$ban_ip]);
+        if ($stmt->fetchColumn() > 0) {
+            $ban_error = "IP {$ban_ip} 已被封禁";
+        } else {
+            $stmt = $db->prepare("INSERT INTO mir_banned_ips (ip_address, reason, banned_by) VALUES (?, ?, 'admin')");
+            $stmt->execute([$ban_ip, $ban_reason]);
+            $ban_success = "✅ IP {$ban_ip} 已成功封禁";
+            // 刷新列表
+            $stmt = $db->query("SELECT * FROM mir_banned_ips ORDER BY created_at DESC");
+            $banned_ips = $stmt->fetchAll();
+        }
+    }
+}
+
 // ========== 登录日志分页 ==========
 $log_page = max(0, intval($_GET['log_page'] ?? 0));
 $log_per_page = 30;
-$log_total = $db->query("SELECT COUNT(*) FROM logs")->fetchColumn();
+$log_total = $db->query("SELECT COUNT(*) FROM mir_logs")->fetchColumn();
 $log_total_pages = max(1, ceil($log_total / $log_per_page));
 $log_page = min($log_page, $log_total_pages - 1);
 $log_offset = $log_page * $log_per_page;
 
-$stmt = $db->prepare("SELECT * FROM logs ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$stmt = $db->prepare("SELECT * FROM mir_logs ORDER BY created_at DESC LIMIT ? OFFSET ?");
 $stmt->execute([$log_per_page, $log_offset]);
 $logs = $stmt->fetchAll();
 
 // ========== 封禁IP列表 ==========
-$stmt = $db->query("SELECT * FROM banned_ips ORDER BY created_at DESC");
+$stmt = $db->query("SELECT * FROM mir_banned_ips ORDER BY created_at DESC");
 $banned_ips = $stmt->fetchAll();
 
 // ========== 趋势图数据（近7天） ==========
 $chart_data = [];
 for ($i = 6; $i >= 0; $i--) {
     $d = date('Y-m-d', strtotime("-{$i} days"));
-    $visits = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='visit' AND DATE(created_at) = ?");
+    $visits = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='visit' AND DATE(created_at) = ?");
     $visits->execute([$d]);
-    $captures = $db->prepare("SELECT COUNT(*) FROM logs WHERE action='capture' AND DATE(created_at) = ?");
+    $captures = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='capture' AND DATE(created_at) = ?");
     $captures->execute([$d]);
     $chart_data[] = [
         'date' => date('m/d', strtotime($d)),
@@ -102,7 +133,7 @@ for ($i = 6; $i >= 0; $i--) {
 $chart_json = json_encode($chart_data);
 
 // ========== 照片总数（用于AJAX）==========
-$photo_total = $db->query("SELECT COUNT(*) FROM photos")->fetchColumn();
+$photo_total = $db->query("SELECT COUNT(*) FROM mir_photos")->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -110,7 +141,7 @@ $photo_total = $db->query("SELECT COUNT(*) FROM photos")->fetchColumn();
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>控制台 v2.0 · 网恋照妖镜</title>
+<title>控制台 v3.0 · 网恋照妖镜</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -358,11 +389,12 @@ table td .geocell {
 </head>
 <body>
 <div class="topbar">
-    <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v2.0</div>
+    <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v3.0</div>
     <div class="nav">
         <a href="index.php"><i class="fas fa-home"></i> 首页</a>
         <a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
         <a href="export.php" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
+        <a href="settings.php" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
         <a href="settings.php" id="notifyBell" style="position:relative;cursor:pointer;" title="点击设置通知 | 长按打开详细设置">
             <i class="fas fa-bell"></i>
             <?php if (getSetting('email_enabled') === '1'): ?>
@@ -559,7 +591,7 @@ loadMorePhotos();
         <tbody>
             <?php foreach ($recent_links as $link): 
                 $geo_visited = false;
-                $stmt = $db->prepare("SELECT city, isp FROM photos WHERE link_id = ? AND city IS NOT NULL LIMIT 1");
+                $stmt = $db->prepare("SELECT city, isp FROM mir_photos WHERE link_id = ? AND city IS NOT NULL LIMIT 1");
                 $stmt->execute([$link['link_id']]);
                 $geo_info = $stmt->fetch();
             ?>
@@ -682,6 +714,65 @@ function editTags(linkId, currentTags) {
     <span><i class="fas fa-ban"></i> 封禁IP列表</span>
     <a href="dashboard.php?tab=banned" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
 </h3>
+
+<!-- 手动封禁表单（点击展开） -->
+<div style="margin-bottom:16px;">
+    <button onclick="toggleBanForm()" id="banFormToggleBtn" 
+        style="width:100%;padding:12px 20px;border:1px dashed rgba(255,80,80,0.25);border-radius:12px;background:rgba(255,80,80,0.04);color:#ff6b6b;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:8px;"
+        onmouseover="this.style.background='rgba(255,80,80,0.1)'" onmouseout="this.style.background='rgba(255,80,80,0.04)'">
+        <i class="fas fa-gavel"></i> 手动封禁IP
+        <i class="fas fa-chevron-down" id="banFormArrow" style="font-size:12px;transition:transform 0.3s;"></i>
+    </button>
+    <div id="banFormBody" style="display:none;margin-top:10px;background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.12);border-radius:12px;padding:16px 20px;">
+        <?php if ($ban_error): ?>
+            <div style="padding:8px 12px;border-radius:8px;background:rgba(255,80,80,0.12);color:#ff6b6b;font-size:13px;margin-bottom:10px;"><?php echo htmlspecialchars($ban_error); ?></div>
+        <?php endif; ?>
+        <?php if ($ban_success): ?>
+            <div style="padding:8px 12px;border-radius:8px;background:rgba(76,175,80,0.12);color:#4caf50;font-size:13px;margin-bottom:10px;"><?php echo htmlspecialchars($ban_success); ?></div>
+        <?php endif; ?>
+        <form method="POST" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <input type="hidden" name="action" value="ban_ip">
+            <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
+            <div style="flex:1;min-width:160px;">
+                <label style="font-size:12px;color:#8080a0;display:block;margin-bottom:4px;">IP地址</label>
+                <input type="text" name="ban_ip" placeholder="例如：192.168.1.1" required
+                    style="width:100%;padding:10px 14px;border:1px solid rgba(255,80,80,0.2);border-radius:8px;background:rgba(0,0,0,0.2);color:#e0e0e0;font-size:14px;outline:none;">
+            </div>
+            <div style="flex:1;min-width:160px;">
+                <label style="font-size:12px;color:#8080a0;display:block;margin-bottom:4px;">封禁原因（选填）</label>
+                <input type="text" name="ban_reason" placeholder="例如：恶意刷链接"
+                    style="width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:rgba(0,0,0,0.2);color:#e0e0e0;font-size:14px;outline:none;">
+            </div>
+            <button type="submit" 
+                style="padding:10px 20px;border:none;border-radius:8px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:white;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;white-space:nowrap;"
+                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <i class="fas fa-ban"></i> 封禁
+            </button>
+        </form>
+    </div>
+</div>
+<script>
+function toggleBanForm() {
+    var body = document.getElementById('banFormBody');
+    var arrow = document.getElementById('banFormArrow');
+    var btn = document.getElementById('banFormToggleBtn');
+    if (body.style.display === 'block') {
+        body.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+        btn.style.borderStyle = 'dashed';
+    } else {
+        body.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+        btn.style.borderStyle = 'solid';
+    }
+}
+<?php if ($ban_error || $ban_success): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    toggleBanForm();
+});
+<?php endif; ?>
+</script>
+
 <?php if (empty($banned_ips)): ?>
 <p style="color:#8080a0;padding:20px;text-align:center;">暂无封禁IP ✅</p>
 <?php else: ?>
@@ -694,7 +785,7 @@ function editTags(linkId, currentTags) {
             <?php foreach ($banned_ips as $b): ?>
             <tr>
                 <td><code><?php echo htmlspecialchars($b['ip_address']); ?></code></td>
-                <td><?php echo htmlspecialchars($b['reason'] ?? '管理员手动封禁'); ?></td>
+                <td><?php echo htmlspecialchars(!empty($b['reason']) ? $b['reason'] : '违规行为，系统已封禁'); ?></td>
                 <td><span class="badge badge-banned"><?php echo htmlspecialchars($b['banned_by'] ?? 'admin'); ?></span></td>
                 <td><?php echo date('m-d H:i', strtotime($b['created_at'])); ?></td>
                 <td><a href="?tab=banned&unban_ip=<?php echo urlencode($b['ip_address']); ?>" class="action-link" style="color:#4caf50;" onclick="return confirm('确定解封此IP？')"><i class="fas fa-check"></i> 解封</a></td>

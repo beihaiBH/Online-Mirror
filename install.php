@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
             if (empty($error)) {
                 // ========== 创建数据库表 ==========
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `users` (
+                    CREATE TABLE IF NOT EXISTS `mir_users` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `username` VARCHAR(50) NOT NULL UNIQUE,
                         `password` VARCHAR(255) NOT NULL,
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 ");
                 
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `links` (
+                    CREATE TABLE IF NOT EXISTS `mir_links` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `link_id` VARCHAR(50) NOT NULL UNIQUE,
                         `redirect_url` VARCHAR(1000) NOT NULL,
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 ");
                 
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `photos` (
+                    CREATE TABLE IF NOT EXISTS `mir_photos` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `link_id` VARCHAR(50) NOT NULL,
                         `file_path` VARCHAR(500) NOT NULL,
@@ -131,12 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         INDEX `idx_link_id` (`link_id`),
                         INDEX `idx_created_at` (`created_at`),
-                        CONSTRAINT `fk_photos_link` FOREIGN KEY (`link_id`) REFERENCES `links`(`link_id`) ON DELETE CASCADE
+                        CONSTRAINT `fk_photos_link` FOREIGN KEY (`link_id`) REFERENCES `mir_links`(`link_id`) ON DELETE CASCADE
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 ");
                 
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `logs` (
+                    CREATE TABLE IF NOT EXISTS `mir_logs` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `link_id` VARCHAR(50) DEFAULT NULL,
                         `action` VARCHAR(50) NOT NULL,
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 ");
                 
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `banned_ips` (
+                    CREATE TABLE IF NOT EXISTS `mir_banned_ips` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `ip_address` VARCHAR(45) NOT NULL UNIQUE,
                         `reason` VARCHAR(255) DEFAULT NULL,
@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 ");
                 
                 $pdo->exec("
-                    CREATE TABLE IF NOT EXISTS `settings` (
+                    CREATE TABLE IF NOT EXISTS `mir_settings` (
                         `id` INT AUTO_INCREMENT PRIMARY KEY,
                         `key` VARCHAR(100) NOT NULL UNIQUE,
                         `value` TEXT DEFAULT NULL,
@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 ");
                 
                 // 插入管理员账户
-                $stmt = $pdo->prepare("INSERT INTO `users` (`username`, `password`, `role`) VALUES (?, ?, 'admin')");
+                $stmt = $pdo->prepare("INSERT INTO `mir_users` (`username`, `password`, `role`) VALUES (?, ?, 'admin')");
                 $stmt->execute([$admin_user, $admin_pass]);
                 
                 // ========== 写入 config.php ==========
@@ -322,7 +322,7 @@ p { color: #aaa; margin-bottom: 24px; line-height: 1.6; }
     <div class="check">✅</div>
     <h2>🎉 安装成功！</h2>
     <p>
-        网恋照妖镜 v2.0 已安装完成。<br>
+        网恋照妖镜 v3.0 已安装完成。<br>
         数据库表已创建，管理员账号已就绪。
     </p>
     <div class="warn">
@@ -357,7 +357,7 @@ setTimeout(function() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>一键安装 · 网恋照妖镜 v2.0</title>
+<title>一键安装 · 网恋照妖镜 v3.0</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }

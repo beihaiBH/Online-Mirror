@@ -14,10 +14,10 @@ $per_page = 12;
 $offset = $page * $per_page;
 
 // 获取照片总数
-$total = $db->query("SELECT COUNT(*) FROM photos")->fetchColumn();
+$total = $db->query("SELECT COUNT(*) FROM mir_photos")->fetchColumn();
 
 // 获取分页照片
-$stmt = $db->prepare("SELECT p.*, l.redirect_url FROM photos p LEFT JOIN links l ON p.link_id = l.link_id ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
+$stmt = $db->prepare("SELECT p.*, l.redirect_url FROM mir_photos p LEFT JOIN mir_links l ON p.link_id = l.link_id ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
 $stmt->execute([$per_page, $offset]);
 $photos = $stmt->fetchAll();
 
