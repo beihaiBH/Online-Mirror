@@ -621,7 +621,8 @@ function checkAIQuota($link_id) {
         return [
             'allowed' => $used < $quota,
             'quota' => $quota,
-            'used' => $used
+            'used' => $used,
+            'remaining' => max(0, $quota - $used),
         ];
     } catch (Exception $e) {
         return ['allowed' => false, 'quota' => $quota, 'used' => 0];
