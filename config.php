@@ -157,15 +157,42 @@ function generateID($length = 6) {
 }
 
 /**
- * 检查IP是否被永久封禁
+ * 获取IP封禁详细信息（含创建时间）
+ */
+function getBanInfo() {
+    $ip = getClientIP();
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT ip_address, reason, banned_by, created_at FROM mir_banned_ips WHERE ip_address = ?");
+        $stmt->execute([$ip]);
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+/**
+ * 检查IP是否被封禁（自动封禁24小时后自动解封）
  */
 function isIPBanned() {
     $ip = getClientIP();
     try {
         $db = getDB();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM mir_banned_ips WHERE ip_address = ?");
+        $stmt = $db->prepare("SELECT id, banned_by, created_at FROM mir_banned_ips WHERE ip_address = ?");
         $stmt->execute([$ip]);
-        return $stmt->fetchColumn() > 0;
+        $row = $stmt->fetch();
+        if (!$row) return false;
+
+        // 系统自动封禁超过24小时的自动解封
+        if ($row['banned_by'] === 'system') {
+            $created = strtotime($row['created_at']);
+            if (time() - $created >= 86400) {
+                $del = $db->prepare("DELETE FROM mir_banned_ips WHERE id = ?");
+                $del->execute([$row['id']]);
+                return false;
+            }
+        }
+        return true;
     } catch (Exception $e) {
         return false;
     }
@@ -175,16 +202,10 @@ function isIPBanned() {
  * 获取封禁原因
  */
 function getBanReason() {
-    $ip = getClientIP();
-    try {
-        $db = getDB();
-        $stmt = $db->prepare("SELECT reason FROM mir_banned_ips WHERE ip_address = ?");
-        $stmt->execute([$ip]);
-        $row = $stmt->fetch();
-        if ($row && !empty($row['reason'])) {
-            return htmlspecialchars($row['reason']);
-        }
-    } catch (Exception $e) {}
+    $info = getBanInfo();
+    if ($info && !empty($info['reason'])) {
+        return htmlspecialchars($info['reason']);
+    }
     return '您的访问已被系统限制，如有疑问请联系管理员。';
 }
 
@@ -195,11 +216,9 @@ function checkRateLimit() {
     $ip = getClientIP();
     $db = getDB();
     
-    // 检查是否被永久封禁
-    $stmt = $db->prepare("SELECT COUNT(*) FROM mir_banned_ips WHERE ip_address = ?");
-    $stmt->execute([$ip]);
-    if ($stmt->fetchColumn() > 0) {
-        return [false, '⛔ 您的IP已被永久封禁，原因：频繁创建链接。如有疑问请联系管理员。'];
+    // 检查是否被封禁（自动封禁24h自动解封）
+    if (isIPBanned()) {
+        return [false, '⛔ 您的IP已被封禁，暂时无法创建链接。'];
     }
     
     // 检查60秒内是否创建过
@@ -216,7 +235,7 @@ function checkRateLimit() {
     if ($count >= 10) {
         $stmt = $db->prepare("INSERT IGNORE INTO mir_banned_ips (ip_address, reason, banned_by) VALUES (?, '自动封禁：1小时内创建超过10个链接', 'system')");
         $stmt->execute([$ip]);
-        return [false, '⛔ 您的IP已被永久封禁，原因：频繁创建链接。如有疑问请联系管理员。'];
+        return [false, '⛔ 操作过于频繁，您的IP已被临时封禁，24小时后自动解封。'];
     }
     
     return [true, ''];

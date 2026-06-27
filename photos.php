@@ -8,63 +8,15 @@ require_once __DIR__ . '/config.php';
 
 // ========== 封禁IP拦截：禁止查看图片 ==========
 if (isIPBanned()) {
+    $ban_info = getBanInfo();
     $ban_reason = getBanReason();
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}/* ========== 🎬 动画 ========== */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-@keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
-    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
-}
-
-.container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
-.stats-grid, .section-title, .tab-nav { animation: fadeInUp 0.5s ease-out; }
-.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
-.stat-card:nth-child(1) { animation-delay: 0.05s; }
-.stat-card:nth-child(2) { animation-delay: 0.1s; }
-.stat-card:nth-child(3) { animation-delay: 0.15s; }
-.stat-card:nth-child(4) { animation-delay: 0.2s; }
-.stat-card:nth-child(5) { animation-delay: 0.25s; }
-.stat-card:nth-child(6) { animation-delay: 0.3s; }
-.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-.photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-.btn-save, .btn-login, .btn-danger, .btn-warning,
-.load-more-btn, .export-btn, .refresh-btn {
-    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-.btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
-.load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
-    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
-}
-.toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.toggle:hover { transform: scale(1.05); }
-.toggle .knob { transition: all 0.3s cubic-bezier(0.68,-0.55,0.27,1.55); }
-.toggle-field { animation: slideDown 0.3s ease-out; }
-.modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
-table tr { transition: background 0.2s; }
-table tr:hover td { background: rgba(102,126,234,0.05) !important; }
-.tag { transition: all 0.2s; }
-.tag:hover { transform: translateY(-1px); }
-.footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.footer .social-links a:hover { transform: translateY(-2px); }
-.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p></div></body></html>');
+    $banned_by = $ban_info ? $ban_info['banned_by'] : '';
+    $is_system = ($banned_by === 'system');
+    $remaining = 0;
+    if ($is_system && $ban_info && $ban_info['created_at']) {
+        $remaining = max(0, 86400 - (time() - strtotime($ban_info['created_at'])));
+    }
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
 }
 
 $id = trim($_GET['id'] ?? '');
