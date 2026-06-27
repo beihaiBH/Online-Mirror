@@ -189,7 +189,7 @@ function checkRateLimit() {
     $stmt = $db->prepare("SELECT COUNT(*) FROM mir_logs WHERE action='generate' AND ip_address = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND)");
     $stmt->execute([$ip]);
     if ($stmt->fetchColumn() > 0) {
-        return [false, '⏳ 操作太频繁了，请等待60秒后再试'];
+        return [false, '⏳ 操作太频繁了，请稍后再试'];
     }
     
     // 检查1小时内创建了多少个
