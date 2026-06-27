@@ -5,8 +5,8 @@
 // 安装向导：浏览器访问 install.php
 
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_USER', getenv('DB_USER') ?: 'mirror');
+define('DB_PASS', getenv('DB_PASS') ?: 'Mirror2024!Secure');
 define('DB_NAME', getenv('DB_NAME') ?: 'mirror');
 define('IMG_DIR', __DIR__ . '/img/');
 define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/mirror/');
@@ -259,7 +259,7 @@ function getAISettings() {
         'prompt' => getSetting('ai_prompt') ?: "请分析这张照片中的人物，根据以下维度详细描述：\n1. 👤 是否有人像 - 照片中是否包含真人\n2. 📅 年龄估算 - 估算人物年龄范围\n3. ⚧️ 性别判断 - 判断性别\n4. 😊 表情分析 - 描述人物表情和神态\n5. 🔍 真人/网图判断 - 判断是真人实拍还是网络图片\n6. 🔮 面相性格 - 分析面相特征和可能的性格特点\n7. 🏠 环境描述 - 描述拍摄环境\n8. 🖼️ 画面内容 - 详细描述画面中的内容\n9. 💡 光线色调 - 分析光线和色调\n10. 📷 拍摄场景 - 判断可能的拍摄场景",
         'quota' => intval(getSetting('ai_analysis_quota') ?: 100),
         'options' => $options,
-        'more_options' => [],
+        'more_options' => getSetting('ai_analysis_more') ?: '',
     ];
 }
 /**
