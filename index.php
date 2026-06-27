@@ -1159,6 +1159,9 @@ function clearAllHistory() {
 <?php if ($generated_link): ?>
 document.getElementById('resultBox').style.display = 'block';
 saveHistory('<?php echo htmlspecialchars($generated_id); ?>', '<?php echo htmlspecialchars($generated_link); ?>');
+setTimeout(function() {
+    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}, 100);
 <?php endif; ?>
 
 // 预先清空表单的redirect_url字段
