@@ -172,6 +172,23 @@ function isIPBanned() {
 }
 
 /**
+ * 获取封禁原因
+ */
+function getBanReason() {
+    $ip = getClientIP();
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT reason FROM mir_banned_ips WHERE ip_address = ?");
+        $stmt->execute([$ip]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['reason'])) {
+            return htmlspecialchars($row['reason']);
+        }
+    } catch (Exception $e) {}
+    return '您的访问已被系统限制，如有疑问请联系管理员。';
+}
+
+/**
  * 检查IP是否超过创建频率
  */
 function checkRateLimit() {

@@ -9,7 +9,7 @@ require_once __DIR__ . '/config.php';
 // ========== 封禁IP拦截：禁止查看图片 ==========
 if (isIPBanned()) {
     $ban_reason = getBanReason();
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:22px;color:#ff6b6b;margin:0 0 8px}.card p{color:#8080a0;font-size:14px;line-height:1.6;margin:0}/* ========== 🎬 动画 ========== */
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}/* ========== 🎬 动画 ========== */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -64,7 +64,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 .footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 .footer .social-links a:hover { transform: translateY(-2px); }
 .toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-</style></head><body><div class="card"><div class="icon">🚫</div><h1>访问被拒绝</h1><p>' . htmlspecialchars($ban_reason) . '</p></div></body></html>');
+</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p></div></body></html>');
 }
 
 $id = trim($_GET['id'] ?? '');
