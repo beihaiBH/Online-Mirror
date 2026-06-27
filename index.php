@@ -1067,6 +1067,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 <?php endif; ?>
 
+// ========== 邮箱通知自动保存 (localStorage) ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // 还原上次输入的邮箱
+    var savedEmail = localStorage.getItem('mirror_notify_email');
+    if (savedEmail) {
+        var emailInput = document.querySelector('input[name="notify_email"]');
+        var emailBtn = document.getElementById('toggleEmailBtn');
+        var emailField = document.getElementById('toggleEmailField');
+        if (emailInput && emailBtn && emailField) {
+            emailInput.value = savedEmail;
+            if (!emailBtn.classList.contains('on')) {
+                emailBtn.classList.add('on');
+            }
+            if (!emailField.classList.contains('show')) {
+                emailField.classList.add('show');
+            }
+        }
+    }
+    
+    // 提交时保存邮箱
+    var form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            var emailInput = document.querySelector('input[name="notify_email"]');
+            var emailBtn = document.getElementById('toggleEmailBtn');
+            if (emailInput && emailBtn && emailBtn.classList.contains('on') && emailInput.value) {
+                localStorage.setItem('mirror_notify_email', emailInput.value);
+            }
+        });
+    }
+});
+
 // ========== v3.0 历史记录 (localStorage) ==========
 function saveHistory(id, link) {
     try {
