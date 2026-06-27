@@ -918,12 +918,12 @@ body {
 
 <!-- 免责/隐私弹窗 -->
 <div class="dev-modal" id="disclaimerModal">
-    <div class="modal-box">
+    <div class="modal-box" style="display:flex;flex-direction:column;max-height:80vh;overflow:hidden;">
         <div class="modal-header">
             <h3><i class="fas fa-shield-alt" style="color:#ff9800;"></i> 免责声明</h3>
             <button class="close-btn" onclick="closeDisclaimer()">&times;</button>
         </div>
-        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;max-height:60vh;overflow-y:auto;">
+        <div class="modal-body" style="flex:1;overflow-y:auto;text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;padding:20px 20px 12px;">
             <p><strong>使用本服务即表示您已阅读、理解并同意以下全部条款：</strong></p>
 
             <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">一、服务性质与用途</p>
@@ -975,10 +975,10 @@ body {
             </ol>
 
             <p style="font-size:12px;color:#8080a0;margin-top:12px;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
-            <div style="display:flex;gap:10px;margin-top:16px;">
-                <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">关闭</button>
-                <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
-            </div>
+        </div>
+        <div style="padding:12px 20px 16px;border-top:1px solid rgba(255,255,255,0.06);background:#1a1a2e;display:flex;gap:10px;">
+            <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">关闭</button>
+            <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
         </div>
     </div>
 </div>
