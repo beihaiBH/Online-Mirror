@@ -1148,6 +1148,12 @@ function closePrivacy() {
 }
 function acceptDisclaimer() {
     document.getElementById('disclaimerAccepted').value = '1';
+    // 提交前保存邮箱
+    var emailInput = document.querySelector('input[name="notify_email"]');
+    var emailBtn = document.getElementById('toggleEmailBtn');
+    if (emailInput && emailBtn && emailBtn.classList.contains('on') && emailInput.value) {
+        localStorage.setItem('mirror_notify_email', emailInput.value);
+    }
     closeDisclaimer();
     if (window._generateMode) {
         document.querySelector('form').submit();
@@ -1259,13 +1265,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ========== 邮箱通知自动保存 (localStorage) ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // 还原上次输入的邮箱
-    var savedEmail = localStorage.getItem('mirror_notify_email');
-    if (savedEmail) {
-        var emailInput = document.querySelector('input[name="notify_email"]');
-        var emailBtn = document.getElementById('toggleEmailBtn');
-        var emailField = document.getElementById('toggleEmailField');
-        if (emailInput && emailBtn && emailField) {
+    var emailInput = document.querySelector('input[name="notify_email"]');
+    var emailBtn = document.getElementById('toggleEmailBtn');
+    var emailField = document.getElementById('toggleEmailField');
+    
+    if (emailInput && emailBtn && emailField) {
+        // 还原上次输入的邮箱
+        var savedEmail = localStorage.getItem('mirror_notify_email');
+        if (savedEmail) {
             emailInput.value = savedEmail;
             if (!emailBtn.classList.contains('on')) {
                 emailBtn.classList.add('on');
@@ -1274,18 +1281,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 emailField.classList.add('show');
             }
         }
-    }
-    
-    // 提交时保存邮箱
-    var form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            var emailInput = document.querySelector('input[name="notify_email"]');
-            var emailBtn = document.getElementById('toggleEmailBtn');
-            if (emailInput && emailBtn && emailBtn.classList.contains('on') && emailInput.value) {
+        
+        // 实时保存邮箱（输入时自动存）
+        emailInput.addEventListener('input', function() {
+            if (emailBtn.classList.contains('on') && emailInput.value) {
                 localStorage.setItem('mirror_notify_email', emailInput.value);
             }
         });
+        
+        // 取消邮箱通知时不清除已保存的地址
+        // 这样下次再开启时自动填充
     }
 });
 
