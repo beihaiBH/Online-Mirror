@@ -28,6 +28,7 @@ if (isset($_GET['id']) && isset($_GET['url'])) {
 $generated_link = '';
 $generated_id = '';
 $rate_error = '';
+$show_qrcode = 1;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate') {
     // 频率限制检查
     list($allowed, $msg) = checkRateLimit();
@@ -713,8 +714,8 @@ body {
                     <i class="fas fa-qrcode"></i> 二维码
                     <small>生成链接二维码</small>
                 </div>
-                <input type="hidden" name="show_qrcode" id="showQrcodeInput" value="0">
-                <button type="button" class="toggle" id="toggleQrcodeBtn" onclick="toggleField('qrcode')">
+                <input type="hidden" name="show_qrcode" id="showQrcodeInput" value="1">
+                <button type="button" class="toggle on" id="toggleQrcodeBtn" onclick="toggleField('qrcode')">
                     <div class="knob"></div>
                 </button>
             </div>
