@@ -923,17 +923,58 @@ body {
             <h3><i class="fas fa-shield-alt" style="color:#ff9800;"></i> 免责声明</h3>
             <button class="close-btn" onclick="closeDisclaimer()">&times;</button>
         </div>
-        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;">
-            <p><strong>使用本服务即表示您已阅读并同意以下条款：</strong></p>
-            <ol style="padding-left:18px;margin:10px 0;">
-                <li>本工具仅用于个人学习、娱乐用途，严禁用于任何非法目的。</li>
-                <li>使用者应自行承担因使用本工具产生的一切法律责任。</li>
-                <li>请勿使用本工具拍摄、传播侵犯他人合法权益的内容。</li>
-                <li>开发者不对因使用本工具造成的任何直接或间接损失承担责任。</li>
-                <li>生成的链接仅供临时使用，请勿用于重要或敏感场景。</li>
-                <li>我们尊重用户隐私，不会主动收集您的个人身份信息。</li>
+        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;max-height:60vh;overflow-y:auto;">
+            <p><strong>使用本服务即表示您已阅读、理解并同意以下全部条款：</strong></p>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">一、服务性质与用途</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>本工具为个人开发的开源项目，仅供学习、研究、娱乐等非商业用途。</li>
+                <li>本工具以"现有状态"提供，不构成任何形式的商业产品或服务承诺。</li>
+                <li>开发者保留随时修改、暂停或终止服务的权利，恕不另行通知。</li>
             </ol>
-            <p style="font-size:12px;color:#8080a0;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">二、用户行为规范</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>用户承诺不会将本工具用于任何违反中华人民共和国法律法规的活动。</li>
+                <li>禁止使用本工具拍摄、存储、传播任何侵犯他人肖像权、隐私权、名誉权等合法权益的内容。</li>
+                <li>禁止使用本工具从事跟踪、监视、骚扰他人等不当行为。</li>
+                <li>禁止利用本工具传播色情、暴力、赌博、毒品、恐怖主义等违法有害信息。</li>
+                <li>禁止试图破解、反向工程、篡改本工具的任何功能或安全机制。</li>
+                <li>禁止利用自动化脚本、爬虫等方式滥用本工具的服务。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">三、责任声明</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>用户应自行承担使用本工具产生的一切法律责任和后果。</li>
+                <li>在任何情况下，开发者均不对因使用或无法使用本工具所造成的任何直接、间接、偶然、特殊或惩罚性损失承担责任，包括但不限于数据丢失、设备损坏、名誉损害、商业损失等。</li>
+                <li>用户通过本工具拍摄的照片、录制的音频等内容由用户自行负责管理，开发者不对内容的合法性、安全性做任何保证。</li>
+                <li>本工具生成的链接仅为临时性技术功能，开发者不对链接的可用性、持续性做任何明示或暗示的担保。</li>
+                <li>用户通过本工具生成链接跳转到的第三方页面，其内容与开发者无关，用户应自行判断其安全性。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">四、链接使用规范</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>生成的链接仅供临时使用，默认设有有效期，过期后链接将自动失效。</li>
+                <li>请勿将生成的链接用于登录验证、支付确认、身份认证等重要或敏感场景。</li>
+                <li>用户应妥善保管生成的链接及对应的 ID，因链接泄露导致的后果由用户自行承担。</li>
+                <li>禁止将本工具生成的链接用于钓鱼、欺诈等非法活动。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">五、技术免责</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>由于网络环境、服务器状态等因素，开发者不保证服务100%可用或无错误。</li>
+                <li>开发者不承担因第三方服务故障（如服务器宕机、网络攻击等）导致的服务中断责任。</li>
+                <li>用户理解并接受，本工具可能存在的安全漏洞或技术缺陷，开发者会在合理范围内修复但不做绝对保证。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">六、条款变更</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>开发者有权根据需要随时修改本免责声明的全部或部分内容。</li>
+                <li>修改后的条款自发布之日起生效，继续使用本工具即视为接受修改后的条款。</li>
+                <li>建议用户定期查阅本免责声明以了解最新条款。</li>
+            </ol>
+
+            <p style="font-size:12px;color:#8080a0;margin-top:12px;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
             <div style="display:flex;gap:10px;margin-top:16px;">
                 <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">关闭</button>
                 <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
@@ -948,16 +989,81 @@ body {
             <h3><i class="fas fa-user-shield" style="color:#667eea;"></i> 隐私协议</h3>
             <button class="close-btn" onclick="closePrivacy()">&times;</button>
         </div>
-        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;">
-            <p><strong>隐私保护说明：</strong></p>
-            <ol style="padding-left:18px;margin:10px 0;">
-                <li>本工具拍摄的照片仅存储在您自己的服务器上，不会上传至任何第三方平台。</li>
-                <li>我们不会收集、存储或分享任何可识别个人身份的信息。</li>
-                <li>生成链接的访问记录仅用于基础统计，不涉及个人隐私。</li>
-                <li>您可以选择是否开启邮箱通知，邮箱地址仅用于发送通知，不会用于其他用途。</li>
-                <li>本工具不使用任何第三方跟踪器或分析服务。</li>
-                <li>如您对隐私保护有任何疑问，可联系开发者获取帮助。</li>
+        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;max-height:60vh;overflow-y:auto;">
+            <p><strong>最后更新日期：2026年6月27日</strong></p>
+            <p>我们非常重视您的隐私。本隐私协议说明了本工具如何收集、使用、存储和保护您的个人信息。使用本工具即表示您同意本协议所述的做法。</p>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">一、我们收集的信息</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li><strong>照片数据：</strong>当有人通过生成的链接访问时，本工具会调用浏览器摄像头拍摄照片并录制环境声音。这些数据直接存储在您部署本工具的服务器上，不会被上传至任何第三方平台或服务。</li>
+                <li><strong>IP地址：</strong>系统会自动记录访问者的IP地址，用于频率限制、封禁管理和基础访问统计。</li>
+                <li><strong>访问日志：</strong>包括访问时间、链接ID、浏览器User-Agent等基础信息，用于服务运行监控和异常检测。</li>
+                <li><strong>邮箱地址：</strong>如果您选择了邮箱通知功能，您提供的邮箱地址仅用于接收新照片通知，不会用于其他任何用途。</li>
+                <li><strong>浏览器指纹：</strong>系统可能会收集浏览器指纹信息（如屏幕分辨率、操作系统、浏览器版本等非个人识别信息），用于安全验证和反滥用。</li>
             </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">二、我们不会收集的信息</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>我们不会收集您的姓名、身份证号、银行卡号等个人身份信息。</li>
+                <li>我们不会收集您的地理位置信息（GPS坐标仅从拍摄的照片EXIF中提取，不会主动获取您的位置）。</li>
+                <li>我们不会读取您的通讯录、短信、通话记录等手机敏感信息。</li>
+                <li>我们不会收集您的社交账号密码或其他登录凭据。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">三、信息存储与保护</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>所有拍摄的照片和录制的音频默认存储在您部署本工具的服务器本地，不经过任何第三方中转。</li>
+                <li>生成的链接默认设有有效期（由创建者设定），过期后数据不会被主动删除但无法通过过期链接访问。</li>
+                <li>我们采用数据库密码加密存储、安全响应头、防SQL注入等常规安全措施保护数据。</li>
+                <li>但我们无法对数据安全做出绝对保证，建议您定期备份重要数据并确保服务器安全配置。</li>
+                <li>系统日志保留期限为30天，过期后自动清理。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">四、数据使用与共享</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>收集的数据仅用于本工具的正常运行、安全防护和基础统计分析。</li>
+                <li>我们不会将您的任何数据出售、出租或分享给任何第三方。</li>
+                <li>除非法律有明确要求，我们不会向任何机构或个人披露您的数据。</li>
+                <li>本工具不使用任何第三方分析服务（如Google Analytics、百度统计等）。</li>
+                <li>本工具不使用任何第三方广告服务或跟踪器。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">五、Cookie与本地存储</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>本工具可能使用Session Cookie来维持登录状态，不会用于追踪用户行为。</li>
+                <li>本工具可能使用浏览器本地存储（LocalStorage）保存用户偏好设置。</li>
+                <li>所有Cookie和本地存储数据仅用于工具本身的正常运行，不涉及跨站追踪。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">六、用户权利</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>您有权随时删除您部署的服务器上存储的所有照片和日志数据。</li>
+                <li>您可以通过服务器后台查看、管理已生成的链接及其拍摄的照片。</li>
+                <li>您可以选择关闭邮箱通知功能，关闭后已提供的邮箱地址将从系统中移除。</li>
+                <li>您可以设置封禁规则来阻止特定IP访问您的服务。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">七、未成年人保护</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>本工具不建议未满18周岁的未成年人单独使用。</li>
+                <li>如未成年人在监护人陪同下使用，监护人应对其使用行为负责。</li>
+                <li>我们不会故意收集未成年人的个人信息。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">八、隐私政策更新</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>我们可能会不时更新本隐私协议，更新后的版本将在页面中显示新的更新日期。</li>
+                <li>重大变更将通过本工具页面公告的方式通知用户。</li>
+                <li>继续使用本工具即表示您同意更新后的隐私协议。</li>
+            </ol>
+
+            <p style="margin:14px 0 6px;font-weight:600;color:#e0e0e8;">九、联系方式</p>
+            <ol style="padding-left:18px;margin:4px 0 8px;">
+                <li>如您对本隐私协议有任何疑问、意见或投诉，欢迎联系开发者。</li>
+                <li>联系邮箱：stockstock12001@gmail.com</li>
+                <li>我们会在合理时间内回复您的隐私相关询问。</li>
+            </ol>
+
             <div style="text-align:center;margin-top:16px;">
                 <button onclick="closePrivacy()" style="padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">关闭</button>
             </div>
