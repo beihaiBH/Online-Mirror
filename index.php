@@ -819,7 +819,7 @@ body {
             <input type="hidden" name="slider_pass" id="sliderPass" value="0">
         </div>
 
-        <button type="button" class="btn-generate" onclick="showDisclaimer()">
+        <button type="button" class="btn-generate" onclick="showDisclaimer(true)">
             <i class="fas fa-magic"></i> 生成镜像链接
         </button>
         <input type="hidden" name="disclaimer_accepted" id="disclaimerAccepted" value="0">
@@ -935,8 +935,8 @@ body {
             </ol>
             <p style="font-size:12px;color:#8080a0;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
             <div style="display:flex;gap:10px;margin-top:16px;">
-                <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">取消</button>
-                <button onclick="acceptDisclaimer()" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
+                <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">关闭</button>
+                <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
             </div>
         </div>
     </div>
@@ -1018,9 +1018,14 @@ function closeDonation() {
     document.getElementById('donationModal').classList.remove('show');
     document.body.style.overflow = '';
 }
-function showDisclaimer() {
+function showDisclaimer(fromGenerate) {
     document.getElementById('disclaimerModal').classList.add('show');
     document.body.style.overflow = 'hidden';
+    var btn = document.getElementById('disclaimerAcceptBtn');
+    if (btn) {
+        btn.style.display = fromGenerate ? 'block' : 'none';
+        window._generateMode = fromGenerate || false;
+    }
 }
 function closeDisclaimer() {
     document.getElementById('disclaimerModal').classList.remove('show');
@@ -1038,7 +1043,9 @@ function closePrivacy() {
 function acceptDisclaimer() {
     document.getElementById('disclaimerAccepted').value = '1';
     closeDisclaimer();
-    document.querySelector('form').submit();
+    if (window._generateMode) {
+        document.querySelector('form').submit();
+    }
 }
 function copyDevEmail() {
     var email = 'stockstock12001@gmail.com';
