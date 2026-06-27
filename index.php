@@ -44,6 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         requireCsrf();
         
+        // 服务端滑块验证
+        $slider_ok = isset($_POST['slider_pass']) && $_POST['slider_pass'] === '1';
+        $disclaimer_ok = isset($_POST['disclaimer_accepted']) && $_POST['disclaimer_accepted'] === '1';
+        
+        if (!$slider_ok) {
+            $rate_error = '请先完成滑块验证！';
+        } elseif (!$disclaimer_ok) {
+            $rate_error = '请先阅读并同意免责声明！';
+        } else {
+        
         $redirect_url = trim($_POST['redirect_url'] ?? 'https://mobile.yangkeduo.com/');
         $expire_days = intval($_POST['expire_days'] ?? 7);
         $tags = trim($_POST['tags'] ?? '');
@@ -81,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // 写入AI和反向图搜设置（新字段存设置表）
         setSetting('link_ai_' . $link_id, $ai_enabled ? '1' : '0');
         setSetting('link_reverse_' . $link_id, $reverse_enabled ? '1' : '0');
+        } // end slider+disclaimer pass
         
         $generated_id = $link_id;
         // 自定义短域名
@@ -1163,6 +1174,12 @@ function acceptDisclaimer() {
     }
     closeDisclaimer();
     if (window._generateMode) {
+        var sp = document.getElementById('sliderPass');
+        if (!sp || sp.value !== '1') {
+            showToast('请先完成滑块验证！', false);
+            window._generateMode = false;
+            return;
+        }
         document.querySelector('form').submit();
     }
 }
