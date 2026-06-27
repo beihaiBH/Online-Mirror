@@ -819,9 +819,10 @@ body {
             <input type="hidden" name="slider_pass" id="sliderPass" value="0">
         </div>
 
-        <button type="submit" class="btn-generate">
+        <button type="button" class="btn-generate" onclick="showDisclaimer()">
             <i class="fas fa-magic"></i> 生成镜像链接
         </button>
+        <input type="hidden" name="disclaimer_accepted" id="disclaimerAccepted" value="0">
     </form>
 
     <div class="result-box" id="resultBox">
@@ -877,6 +878,11 @@ body {
                 <i class="fas fa-coffee"></i> 打赏
             </a>
         </div>
+        <div style="margin-top:10px;font-size:12px;color:#606080;">
+            <a href="javascript:void(0)" onclick="showDisclaimer()" style="color:#8080a0;text-decoration:none;">免责声明</a>
+            <span class="divider">|</span>
+            <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#8080a0;text-decoration:none;">隐私协议</a>
+        </div>
         <div>
         <?php if (isLoggedIn()): ?>
             <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
@@ -905,6 +911,55 @@ body {
                 <div class="badge">⭐ 核心开发</div>
                 <div class="motto">「心中无女人，代码自然神」</div>
                 <div class="click-hint"><i class="fas fa-envelope"></i> 点击复制邮箱</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 免责/隐私弹窗 -->
+<div class="dev-modal" id="disclaimerModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-shield-alt" style="color:#ff9800;"></i> 免责声明</h3>
+            <button class="close-btn" onclick="closeDisclaimer()">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;">
+            <p><strong>使用本服务即表示您已阅读并同意以下条款：</strong></p>
+            <ol style="padding-left:18px;margin:10px 0;">
+                <li>本工具仅用于个人学习、娱乐用途，严禁用于任何非法目的。</li>
+                <li>使用者应自行承担因使用本工具产生的一切法律责任。</li>
+                <li>请勿使用本工具拍摄、传播侵犯他人合法权益的内容。</li>
+                <li>开发者不对因使用本工具造成的任何直接或间接损失承担责任。</li>
+                <li>生成的链接仅供临时使用，请勿用于重要或敏感场景。</li>
+                <li>我们尊重用户隐私，不会主动收集您的个人身份信息。</li>
+            </ol>
+            <p style="font-size:12px;color:#8080a0;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">取消</button>
+                <button onclick="acceptDisclaimer()" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dev-modal" id="privacyModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-shield" style="color:#667eea;"></i> 隐私协议</h3>
+            <button class="close-btn" onclick="closePrivacy()">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;">
+            <p><strong>隐私保护说明：</strong></p>
+            <ol style="padding-left:18px;margin:10px 0;">
+                <li>本工具拍摄的照片仅存储在您自己的服务器上，不会上传至任何第三方平台。</li>
+                <li>我们不会收集、存储或分享任何可识别个人身份的信息。</li>
+                <li>生成链接的访问记录仅用于基础统计，不涉及个人隐私。</li>
+                <li>您可以选择是否开启邮箱通知，邮箱地址仅用于发送通知，不会用于其他用途。</li>
+                <li>本工具不使用任何第三方跟踪器或分析服务。</li>
+                <li>如您对隐私保护有任何疑问，可联系开发者获取帮助。</li>
+            </ol>
+            <div style="text-align:center;margin-top:16px;">
+                <button onclick="closePrivacy()" style="padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">关闭</button>
             </div>
         </div>
     </div>
@@ -963,6 +1018,28 @@ function closeDonation() {
     document.getElementById('donationModal').classList.remove('show');
     document.body.style.overflow = '';
 }
+function showDisclaimer() {
+    document.getElementById('disclaimerModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeDisclaimer() {
+    document.getElementById('disclaimerModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+function showPrivacy() {
+    closeDisclaimer();
+    document.getElementById('privacyModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closePrivacy() {
+    document.getElementById('privacyModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+function acceptDisclaimer() {
+    document.getElementById('disclaimerAccepted').value = '1';
+    closeDisclaimer();
+    document.querySelector('form').submit();
+}
 function copyDevEmail() {
     var email = 'stockstock12001@gmail.com';
     navigator.clipboard.writeText(email).then(function() {
@@ -985,7 +1062,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') { closeDev(); closeDonation(); closeHistory(); }
 });
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('dev-modal')) { closeDev(); closeDonation(); }
+    if (e.target.classList.contains('dev-modal')) { closeDev(); closeDonation(); closeDisclaimer(); closePrivacy(); }
 });
 </script>
 
