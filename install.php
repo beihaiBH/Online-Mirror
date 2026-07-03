@@ -239,35 +239,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                         . "}\n";
                 }
 
-                // 读取原 config.php 中 getDB() 函数之后的所有内容
+                // 只追加 getDB() 之后的其他辅助函数（跳过getDB本身，模板已有）
                 $oldConfig = file_get_contents(__DIR__ . '/config.php');
-                preg_match('/function getDB\(\).*/s', $oldConfig, $restMatches);
-                $restContent = $restMatches[0] ?? '';
-                
-                // 追加剩余的函数代码（从 getDB 开始）
-                if (!empty($restContent)) {
-                    $configContent .= $restContent;
-                } else {
-                    // 如果获取失败，复制整个 config.php 中从 getDB() 之后的部分
-                    $pos = strpos($oldConfig, 'function getDB()');
-                    if ($pos !== false) {
-                        $configContent .= substr($oldConfig, $pos);
+                // 找 getDB() 之后的下一个函数定义或文件末尾
+                $pos = strpos($oldConfig, 'function getDB()');
+                if ($pos !== false) {
+                    $afterGetDB = substr($oldConfig, $pos);
+                    // 跳过完整 getDB() 函数（数花括号）
+                    $braceCount = 0;
+                    $inFunction = false;
+                    $skipTo = 0;
+                    for ($i = 0; $i < strlen($afterGetDB); $i++) {
+                        $ch = $afterGetDB[$i];
+                        if ($ch === '{') { $braceCount++; $inFunction = true; }
+                        if ($ch === '}') { $braceCount--; }
+                        if ($inFunction && $braceCount === 0) {
+                            $skipTo = $i + 1;
+                            break;
+                        }
+                    }
+                    $restFunctions = trim(substr($afterGetDB, $skipTo));
+                    if (!empty($restFunctions)) {
+                        $configContent .= "\n" . $restFunctions;
                     }
                 }
                 
-                // 读取原 config.php 中 getDB() 函数之后的所有内容
+                // 只追加 getDB() 之后的其他辅助函数（跳过getDB本身，模板已有）
                 $oldConfig = file_get_contents(__DIR__ . '/config.php');
-                preg_match('/function getDB\(\).*/s', $oldConfig, $restMatches);
-                $restContent = $restMatches[0] ?? '';
-                
-                // 追加剩余的函数代码（从 getDB 开始）
-                if (!empty($restContent)) {
-                    $configContent .= $restContent;
-                } else {
-                    // 如果获取失败，复制整个 config.php 中从 getDB() 之后的部分
-                    $pos = strpos($oldConfig, 'function getDB()');
-                    if ($pos !== false) {
-                        $configContent .= substr($oldConfig, $pos);
+                // 找 getDB() 之后的下一个函数定义或文件末尾
+                $pos = strpos($oldConfig, 'function getDB()');
+                if ($pos !== false) {
+                    $afterGetDB = substr($oldConfig, $pos);
+                    // 跳过完整 getDB() 函数（数花括号）
+                    $braceCount = 0;
+                    $inFunction = false;
+                    $skipTo = 0;
+                    for ($i = 0; $i < strlen($afterGetDB); $i++) {
+                        $ch = $afterGetDB[$i];
+                        if ($ch === '{') { $braceCount++; $inFunction = true; }
+                        if ($ch === '}') { $braceCount--; }
+                        if ($inFunction && $braceCount === 0) {
+                            $skipTo = $i + 1;
+                            break;
+                        }
+                    }
+                    $restFunctions = trim(substr($afterGetDB, $skipTo));
+                    if (!empty($restFunctions)) {
+                        $configContent .= "\n" . $restFunctions;
                     }
                 }
                 
