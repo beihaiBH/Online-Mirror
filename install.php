@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                         . "    file_put_contents(IMG_DIR . 'index.html', '<!DOCTYPE html><html><head><title></title></head><body></body></html>');\n"
                         . "}\n"
                         . "if (!file_exists(IMG_DIR . '.htaccess')) {\n"
-                        . "    file_put_contents(IMG_DIR . '.htaccess', 'Options -Indexes' . \"\n\" . '<FilesMatch \"\\.(php|php5|phtml|inc|cgi|pl|sh|py)\">' . \"\n\" . 'Order Deny,Allow' . \"\n\" . 'Deny from all' . \"\n\" . '</FilesMatch>');\n"
+                        . "    file_put_contents(IMG_DIR . '.htaccess', 'Options -Indexes' . \"\n\" . '<FilesMatch \"\\.(php|php5|phtml|inc|cgi|pl|sh|py)\$\">' . \"\n\" . 'Order Deny,Allow' . \"\n\" . 'Deny from all' . \"\n\" . '</FilesMatch>');\n"
                         . "}\n\n"
                         . "/**\n"
                         . " * 获取数据库连接\n"
@@ -264,32 +264,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                     }
                 }
                 
-                // 只追加 getDB() 之后的其他辅助函数（跳过getDB本身，模板已有）
-                $oldConfig = file_get_contents(__DIR__ . '/config.php');
-                // 找 getDB() 之后的下一个函数定义或文件末尾
-                $pos = strpos($oldConfig, 'function getDB()');
-                if ($pos !== false) {
-                    $afterGetDB = substr($oldConfig, $pos);
-                    // 跳过完整 getDB() 函数（数花括号）
-                    $braceCount = 0;
-                    $inFunction = false;
-                    $skipTo = 0;
-                    for ($i = 0; $i < strlen($afterGetDB); $i++) {
-                        $ch = $afterGetDB[$i];
-                        if ($ch === '{') { $braceCount++; $inFunction = true; }
-                        if ($ch === '}') { $braceCount--; }
-                        if ($inFunction && $braceCount === 0) {
-                            $skipTo = $i + 1;
-                            break;
-                        }
-                    }
-                    $restFunctions = trim(substr($afterGetDB, $skipTo));
-                    if (!empty($restFunctions)) {
-                        $configContent .= "\n" . $restFunctions;
-                    }
-                }
-                
-                // 写回 config.php
                 file_put_contents($configFile, $configContent);
                 chmod($configFile, 0644);
                 

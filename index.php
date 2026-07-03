@@ -4,6 +4,13 @@
  * 支持双重模式：链接生成器 & 拍照入口
  */
 session_start();
+// ========== 🚀 安装检测 ==========
+// 如果未安装，自动跳转到安装向导
+if (!file_exists(__DIR__ . '/installed.lock')) {
+    header('Location: install.php');
+    exit;
+}
+
 require_once __DIR__ . '/config.php';
 
 // ========== 🎬 闪屏设置 ==========
