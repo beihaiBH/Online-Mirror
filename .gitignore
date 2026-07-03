@@ -1,10 +1,2 @@
-/img/*.jpg
-/img/*.png
-/img/*.gif
-/img/*.webp
-!/img/index.html
-!/img/.htaccess
-.DS_Store
-Thumbs.db
-*.log
-uploads/recordings/
+installed.lock
+*.bak

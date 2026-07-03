@@ -28,7 +28,7 @@ if (!file_exists(IMG_DIR . 'index.html')) {
     file_put_contents(IMG_DIR . 'index.html', '<!DOCTYPE html><html><head><title></title></head><body></body></html>');
 }
 if (!file_exists(IMG_DIR . '.htaccess')) {
-    file_put_contents(IMG_DIR . '.htaccess', "Options -Indexes\n<FilesMatch \"\.(php|php5|phtml|inc|cgi|pl|sh|py)$\">\nOrder Deny,Allow\nDeny from all\n</FilesMatch>");
+    file_put_contents(IMG_DIR . '.htaccess', 'Options -Indexes' . "\n" . '<FilesMatch "\.(php|php5|phtml|inc|cgi|pl|sh|py)$">' . "\n" . 'Order Deny,Allow' . "\n" . 'Deny from all' . "\n" . '</FilesMatch>');
 }
 
 /**

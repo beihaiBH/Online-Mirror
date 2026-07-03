@@ -182,59 +182,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                 $stmt->execute([$admin_user, $admin_pass]);
                 
                 // ========== 写入 config.php ==========
-                $configContent = <<<EOT
-<?php
+                $configContent = "";
 
-// ========== 📦 数据库配置 ==========
-// 本文件由安装向导自动生成，请勿手动修改
-// 如需修改，请重新运行 install.php 或直接编辑下方常量
+                // 优先使用模板文件（更安全，无转义兼容问题）
+                $templatePath = __DIR__ . '/config.template.php';
+                if (file_exists($templatePath)) {
+                    $configContent = file_get_contents($templatePath);
+                    $configContent = str_replace(
+                        ['{{DB_HOST}}', '{{DB_USER}}', '{{DB_PASS}}', '{{DB_NAME}}', '{{SITE_PATH}}'],
+                        [$db_host, $db_user, $db_pass, $db_name, $site_path],
+                        $configContent
+                    );
+                } else {
+                    // 回退：直接拼接（避免heredoc的\$转义问题）
+                    $configContent = "<?php\n\n"
+                        . "define('DB_HOST', '{$db_host}');\n"
+                        . "define('DB_USER', '{$db_user}');\n"
+                        . "define('DB_PASS', '{$db_pass}');\n"
+                        . "define('DB_NAME', '{$db_name}');\n"
+                        . "define('IMG_DIR', __DIR__ . '/img/');\n"
+                        . "define('SITE_PATH', '{$site_path}');\n"
+                        . "define('SITE_URL', (isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . \$_SERVER['HTTP_HOST'] . '{$site_path}');\n\n"
+                        . "// ========== 🔒 安全响应头 ==========\n"
+                        . "header('X-Content-Type-Options: nosniff');\n"
+                        . "header('X-Frame-Options: DENY');\n"
+                        . "header('X-XSS-Protection: 1; mode=block');\n"
+                        . "header('Referrer-Policy: no-referrer');\n\n"
+                        . "// ========== 📁 自动创建 img 目录 ==========\n"
+                        . "if (!file_exists(IMG_DIR)) {\n"
+                        . "    mkdir(IMG_DIR, 0755, true);\n"
+                        . "}\n"
+                        . "if (!file_exists(IMG_DIR . 'index.html')) {\n"
+                        . "    file_put_contents(IMG_DIR . 'index.html', '<!DOCTYPE html><html><head><title></title></head><body></body></html>');\n"
+                        . "}\n"
+                        . "if (!file_exists(IMG_DIR . '.htaccess')) {\n"
+                        . "    file_put_contents(IMG_DIR . '.htaccess', 'Options -Indexes' . \"\n\" . '<FilesMatch \"\\.(php|php5|phtml|inc|cgi|pl|sh|py)\">' . \"\n\" . 'Order Deny,Allow' . \"\n\" . 'Deny from all' . \"\n\" . '</FilesMatch>');\n"
+                        . "}\n\n"
+                        . "/**\n"
+                        . " * 获取数据库连接\n"
+                        . " */\n"
+                        . "function getDB() {\n"
+                        . "    static \$pdo = null;\n"
+                        . "    if (\$pdo === null) {\n"
+                        . "        try {\n"
+                        . "            \$pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [\n"
+                        . "                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,\n"
+                        . "                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,\n"
+                        . "                PDO::ATTR_EMULATE_PREPARES => false,\n"
+                        . "            ]);\n"
+                        . "        } catch (PDOException \$e) {\n"
+                        . "            header('HTTP/1.1 500 Internal Server Error');\n"
+                        . "            die('系统繁忙，请稍后再试');\n"
+                        . "        }\n"
+                        . "    }\n"
+                        . "    return \$pdo;\n"
+                        . "}\n";
+                }
 
-define('DB_HOST', '{$db_host}');
-define('DB_USER', '{$db_user}');
-define('DB_PASS', '{$db_pass}');
-define('DB_NAME', '{$db_name}');
-define('IMG_DIR', __DIR__ . '/img/');
-define('SITE_PATH', '{$site_path}');
-define('SITE_URL', (isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . \$_SERVER['HTTP_HOST'] . '{$site_path}');
-
-// ========== 🔒 安全响应头 ==========
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: no-referrer');
-
-// ========== 📁 自动创建 img 目录 ==========
-if (!file_exists(IMG_DIR)) {
-    mkdir(IMG_DIR, 0755, true);
-}
-if (!file_exists(IMG_DIR . 'index.html')) {
-    file_put_contents(IMG_DIR . 'index.html', '<!DOCTYPE html><html><head><title></title></head><body></body></html>');
-}
-if (!file_exists(IMG_DIR . '.htaccess')) {
-    file_put_contents(IMG_DIR . '.htaccess', "Options -Indexes\\n<FilesMatch \\\"\\\\.(php|php5|phtml|inc|cgi|pl|sh|py)\$\\\">\\nOrder Deny,Allow\\nDeny from all\\n</FilesMatch>");
-}
-
-/**
- * 获取数据库连接
- */
-function getDB() {
-    static \$pdo = null;
-    if (\$pdo === null) {
-        try {
-            \$pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
-        } catch (PDOException \$e) {
-            header('HTTP/1.1 500 Internal Server Error');
-            die('系统繁忙，请稍后再试');
-        }
-    }
-    return \$pdo;
-}
-
-EOT;
+                // 读取原 config.php 中 getDB() 函数之后的所有内容
+                $oldConfig = file_get_contents(__DIR__ . '/config.php');
+                preg_match('/function getDB\(\).*/s', $oldConfig, $restMatches);
+                $restContent = $restMatches[0] ?? '';
+                
+                // 追加剩余的函数代码（从 getDB 开始）
+                if (!empty($restContent)) {
+                    $configContent .= $restContent;
+                } else {
+                    // 如果获取失败，复制整个 config.php 中从 getDB() 之后的部分
+                    $pos = strpos($oldConfig, 'function getDB()');
+                    if ($pos !== false) {
+                        $configContent .= substr($oldConfig, $pos);
+                    }
+                }
                 
                 // 读取原 config.php 中 getDB() 函数之后的所有内容
                 $oldConfig = file_get_contents(__DIR__ . '/config.php');
@@ -257,6 +276,8 @@ EOT;
                 chmod($configFile, 0644);
                 
                 $success = true;
+                // 创建安装完成标记文件
+                file_put_contents(__DIR__ . '/installed.lock', date('Y-m-d H:i:s'));
             }
             
         } catch (PDOException $e) {
