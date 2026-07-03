@@ -6,6 +6,12 @@
 session_start();
 require_once __DIR__ . '/config.php';
 
+// ========== 🎬 闪屏设置 ==========
+$splash_enabled = getSetting('splash_enabled') !== '0';
+$splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
+$splash_duration = intval(getSetting('splash_duration') ?: '3000');
+
+
 // ========== 封禁IP拦截：禁止生成链接和查看内容 ==========
 if (isIPBanned()) {
     $ban_info = getBanInfo();
@@ -16,7 +22,10 @@ if (isIPBanned()) {
     if ($is_system && $ban_info && $ban_info['created_at']) {
         $remaining = max(0, 86400 - (time() - strtotime($ban_info['created_at'])));
     }
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style>
+<!-- ====== 🎬 
+
+</head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
 }
 
 $csrf = csrfToken();
@@ -617,8 +626,168 @@ body {
 
 .toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 </style>
+
+<!-- ====== 🎬 闪屏样式 ====== -->
+<style>
+@keyframes splashFadeIn {
+    from { opacity: 0; transform: scale(1.08); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes splashContentUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes splashPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes splashGlow {
+    0%, 100% { box-shadow: 0 20px 60px rgba(102,126,234,0.3), 0 0 40px rgba(102,126,234,0.1); }
+    50% { box-shadow: 0 20px 80px rgba(102,126,234,0.5), 0 0 80px rgba(102,126,234,0.2); }
+}
+#splashOverlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 99999;
+    background: linear-gradient(145deg, #0f0c29, #302b63, #24243e);
+    display: flex; align-items: center; justify-content: center;
+    animation: splashFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+#splashOverlay.hide {
+    opacity: 0; transform: scale(1.12);
+    pointer-events: none;
+}
+#splashOverlay.remove { display: none; }
+.splash-container {
+    text-align: center;
+    animation: splashContentUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+    max-width: 85vw;
+}
+.splash-logo {
+    width: 85vw; max-width: 280px;
+    aspect-ratio: 9 / 16;
+    border-radius: 24px;
+    object-fit: cover;
+    animation: splashGlow 3s ease-in-out infinite;
+    border: 2px solid rgba(255,255,255,0.08);
+    margin-bottom: 16px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+.splash-title {
+    font-size: 30px; font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 2px;
+    letter-spacing: 3px;
+}
+.splash-sub {
+    font-size: 13px; color: rgba(255,255,255,0.35);
+    margin-bottom: 20px;
+    letter-spacing: 5px;
+}
+.splash-bar-wrap {
+    width: 220px; height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    margin: 0 auto 12px;
+    overflow: hidden;
+}
+.splash-bar-inner {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+    border-radius: 4px;
+}
+.splash-info {
+    display: flex; justify-content: center; gap: 16px;
+    margin-bottom: 14px;
+}
+.splash-info span {
+    font-size: 11px; color: rgba(255,255,255,0.25);
+    letter-spacing: 1px;
+}
+.splash-skip {
+    display: inline-block;
+    padding: 7px 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    background: transparent;
+    letter-spacing: 1px;
+}
+.splash-skip:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.6);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+}
+.splash-dots {
+    display: flex; gap: 6px; justify-content: center; margin-top: 10px;
+}
+.splash-dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #667eea;
+    animation: splashPulse 1.4s ease-in-out infinite;
+}
+.splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+.splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+</style>
+
 </head>
 <body>
+<?php if ($splash_enabled): ?>
+<!-- ====== 🎬 闪屏 ====== -->
+<div id="splashOverlay">
+    <div class="splash-container">
+        <img class="splash-logo" src="<?= htmlspecialchars($splash_image) ?>" alt="照妖镜"
+             onerror="this.src='/mirror/splash_default.png'" />
+        <div class="splash-title">🔮 照妖镜</div>
+        <div class="splash-sub">3.0</div>
+        <div class="splash-bar-wrap">
+            <div class="splash-bar-inner" id="splashBar"></div>
+        </div>
+        <div class="splash-info">
+            <span>✦ 加载中</span>
+            <span>✦ 照妖镜 3.0</span>
+        </div>
+        <div class="splash-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <button class="splash-skip" onclick="hideSplash()">⏭ 跳过</button>
+    </div>
+</div>
+<script>
+(function() {
+    var splashEl = document.getElementById('splashOverlay');
+    if (!splashEl) return;
+    
+    var timer = null;
+    var duration = <?= max(1000, intval($splash_duration)) ?>;
+    
+    var bar = document.getElementById('splashBar');
+    if (bar) {
+        bar.style.transition = 'width ' + duration + 'ms cubic-bezier(0.16, 1, 0.3, 1)';
+        bar.offsetHeight;
+        bar.style.width = '100%';
+    }
+    
+    window.hideSplash = function() {
+        if (timer) clearTimeout(timer);
+        splashEl.classList.add('hide');
+        setTimeout(function() {
+            splashEl.classList.add('remove');
+        }, 600);
+    };
+    
+    timer = setTimeout(window.hideSplash, duration);
+})();
+</script>
+<?php endif; ?>
 <div class="toast" id="toast"></div>
 
 <div class="container">
@@ -1440,7 +1609,9 @@ function toggleField(type) {
         'burst': ['toggleBurstBtn', 'toggleBurstField'],
         'recording': ['toggleRecordingBtn', 'toggleRecordingField'],
         'qrcode': ['toggleQrcodeBtn', 'showQrcodeInput'],
-        'gps': ['toggleGpsBtn', 'toggleGpsField']
+        'gps': ['toggleGpsBtn', 'toggleGpsField'],
+        'ai': ['toggleAiBtn', 'aiEnabledInput'],
+        'reverse': ['toggleReverseBtn', 'reverseEnabledInput']
     };
     if (type === 'qrcode') {
         var btn = document.getElementById('toggleQrcodeBtn');

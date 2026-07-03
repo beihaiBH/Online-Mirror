@@ -209,6 +209,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $ai_saved = true;
 }
 
+// ========== 🎬 处理闪屏设置保存 ==========
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_splash') {
+    requireCsrf();
+    setSetting('splash_enabled', isset($_POST['splash_enabled']) ? '1' : '0');
+    $img = trim($_POST['splash_image'] ?? '');
+    if (!empty($img)) setSetting('splash_image', $img);
+    $dur = intval($_POST['splash_duration'] ?? 3000);
+    setSetting('splash_duration', strval(max(1000, min(60000, $dur))));
+    $splash_saved = true;
+}
+
 // ========== 当前设置 ==========
 
 // 邮箱设置
@@ -227,6 +238,12 @@ $donation_channels = json_decode(getSetting('donation_channels') ?: '[]', true);
 // AI设置
 $ai_settings = getAISettings();
 $ai_model = $ai_settings['model'];
+
+// 🎬 闪屏设置
+$splash_enabled = getSetting('splash_enabled') !== '0';
+$splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
+$splash_duration = intval(getSetting('splash_duration') ?: '3000');
+$splash_saved = false;
 $ai_api_key = getSetting('ai_api_key') ?: '';
 $ai_has_key = !empty($ai_api_key);
 $ai_prompt = $ai_settings['prompt'];
@@ -275,7 +292,12 @@ body {
 .tab-nav {
     display: flex; gap: 4px; margin-bottom: 24px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; white-space: nowrap;
+    flex-wrap: nowrap;
 }
+.tab-nav::-webkit-scrollbar { display: none; }
 .tab-nav a {
     padding: 10px 20px; border-radius: 10px 10px 0 0;
     text-decoration: none; font-size: 14px; color: #8080a0;
@@ -566,11 +588,12 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 <body>
 <div class="box">
     <h2><i class="fas fa-cog"></i> 系统设置</h2>
-    <p class="sub">配置邮箱通知与 AI 人像分析</p>
+    <p class="sub">配置邮箱通知、开屏闪屏与 AI 人像分析</p>
     
     <!-- 标签导航 -->
     <div class="tab-nav">
         <a href="?tab=email" class="<?php echo $tab === 'email' ? 'active' : ''; ?>"><i class="fas fa-bell"></i> 邮箱通知</a>
+        <a href="?tab=splash" class="<?php echo $tab === 'splash' ? 'active' : ''; ?>"><i class="fas fa-image"></i> 开屏闪屏</a>
         <a href="?tab=donation" class="<?php echo $tab === 'donation' ? 'active' : ''; ?>"><i class="fas fa-coffee"></i> 打赏</a>
         <a href="?tab=ai" class="<?php echo $tab === 'ai' ? 'active' : ''; ?>"><i class="fas fa-robot"></i> AI 分析</a>
         <?php if ($user['role'] === 'admin'): ?>
@@ -739,6 +762,50 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     }
     </script>
 
+    <?php elseif ($tab === 'splash'): ?>
+    <!-- ======================== 🎬 开屏闪屏设置 ======================== -->
+    <?php if ($splash_saved): ?>
+    <div class="success-msg"><i class="fas fa-check-circle"></i> 闪屏设置已保存</div>
+    <?php endif; ?>
+    
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+        <input type="hidden" name="action" value="save_splash">
+        <input type="hidden" name="splash_enabled" id="splashEnabled" value="<?= $splash_enabled ? '1' : '0' ?>">
+        
+        <div class="toggle-group">
+            <div class="label">
+                🎬 开屏闪屏
+                <small>开启后访问首页先显示加载画面</small>
+            </div>
+            <button type="button" class="toggle <?= $splash_enabled ? 'on' : ''; ?>" id="splashToggleBtn" onclick="toggleSplash()">
+                <div class="knob"></div>
+            </button>
+        </div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-link"></i> 闪屏图片地址</label>
+            <input type="text" name="splash_image" 
+                value="<?= htmlspecialchars($splash_image) ?>" 
+                placeholder="/mirror/splash_default.png">
+            <div class="hint">支持网络图片URL，推荐 9:16 竖屏比例</div>
+        </div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-clock"></i> 显示时长（毫秒）</label>
+            <input type="number" name="splash_duration" 
+                value="<?= $splash_duration ?>" min="1000" max="60000" step="500"
+                style="max-width:160px;">
+            <div class="hint">1000~60000毫秒，默认3000毫秒（3秒）</div>
+        </div>
+        
+        <div style="display:flex;gap:12px;margin-top:16px;">
+            <button type="submit" class="btn-save"><i class="fas fa-save"></i> 保存设置</button>
+            <button type="button" class="btn btn-sm" onclick="previewSplash()">
+                <i class="fas fa-eye"></i> 预览
+            </button>
+        </div>
+    </form>
     <?php elseif ($tab === 'ai'): ?>
     <!-- ======================== AI 分析设置 ======================== -->
     <?php if ($ai_saved): ?>
@@ -1089,6 +1156,19 @@ document.addEventListener('change', function(e) {
 </div>
 
 <script>
+function toggleSplash() {
+    var btn = document.getElementById('splashToggleBtn');
+    var input = document.getElementById('splashEnabled');
+    var isOn = btn.classList.contains('on');
+    if (isOn) {
+        btn.classList.remove('on');
+        input.value = '0';
+    } else {
+        btn.classList.add('on');
+        input.value = '1';
+    }
+}
+
 function toggleEmail() {
     var btn = document.getElementById('toggleBtn');
     var fields = document.getElementById('emailFields');
@@ -1104,6 +1184,36 @@ function toggleEmail() {
         fields.style.display = 'block';
         input.value = '1';
     }
+}
+
+// 🎬 闪屏预览
+function previewSplash() {
+    var img = document.querySelector('input[name="splash_image"]').value || '/mirror/splash_default.png';
+    var dur = parseInt(document.querySelector('input[name="splash_duration"]').value) || 2500;
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'splashPreview';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;background:linear-gradient(145deg,#0f0c29,#302b63,#24243e);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.5s ease-out';
+    
+    var style = document.createElement('style');
+    style.id = 'previewStyle';
+    style.textContent = '@keyframes fadeIn{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}@keyframes barAnim{from{width:0%}to{width:100%}}.prev-container{text-align:center;animation:contentUp 0.8s ease-out 0.2s both}@keyframes contentUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}.prev-img{width:200px;height:200px;border-radius:30px;object-fit:cover;box-shadow:0 20px 60px rgba(102,126,234,0.3);border:2px solid rgba(255,255,255,0.1);margin-bottom:16px}.prev-title{font-size:28px;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}.prev-sub{font-size:13px;color:#8080a0;margin-bottom:20px}.prev-bar{width:180px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;margin:0 auto;overflow:hidden}.prev-bar-in{height:100%;width:0%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;animation:barAnim ' + (dur/1000) + 's ease-in-out forwards}.prev-skip{margin-top:12px;padding:6px 20px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:#8080a0;font-size:12px;cursor:pointer;background:transparent}.prev-skip:hover{background:rgba(255,255,255,0.08)}';
+    
+    overlay.innerHTML = '<div class="prev-container"><img class="prev-img" src="' + img + '" onerror="this.src='https://via.placeholder.com/400?text=图片加载失败'"><div class="prev-title">🔮 照妖镜</div><div class="prev-sub">3.0 · 喵喵特供版</div><div class="prev-bar"><div class="prev-bar-in"></div></div><button class="prev-skip" onclick="document.getElementById(\'splashPreview\').remove();document.getElementById(\'previewStyle\').remove()">⏭ 关闭预览</button></div>';
+    
+    document.body.appendChild(style);
+    document.body.appendChild(overlay);
+    
+    setTimeout(function() {
+        var el = document.getElementById('splashPreview');
+        if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.5s'; }
+        setTimeout(function() {
+            var e2 = document.getElementById('splashPreview');
+            var s2 = document.getElementById('previewStyle');
+            if (e2) e2.remove();
+            if (s2) s2.remove();
+        }, 500);
+    }, dur + 500);
 }
 
 function showRecommend() {
