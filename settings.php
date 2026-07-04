@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     
     $enabled = ($_POST['email_enabled'] ?? '') === '1' ? '1' : '0';
     setSetting('email_enabled', $enabled);
+    error_log('[Mirror Debug] save_email: POST email_enabled=' . var_export($_POST['email_enabled'] ?? 'NULL', true) . ' => saved as ' . $enabled);
     
     if ($enabled === '1') {
         setSetting('email_smtp_host', trim($_POST['email_smtp_host'] ?? 'smtp.qq.com'));
@@ -213,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_splash') {
     requireCsrf();
     setSetting('splash_enabled', ($_POST['splash_enabled'] ?? '') === '1' ? '1' : '0');
+    error_log('[Mirror Debug] save_splash: POST splash_enabled=' . var_export($_POST['splash_enabled'] ?? 'NULL', true) . ' => saved as ' . (($_POST['splash_enabled'] ?? '') === '1' ? '1' : '0'));
     $img = trim($_POST['splash_image'] ?? '');
     if (!empty($img)) setSetting('splash_image', $img);
     $dur = intval($_POST['splash_duration'] ?? 3000);
