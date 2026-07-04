@@ -124,7 +124,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // 写入AI和反向图搜设置（新字段存设置表）
         setSetting('link_ai_' . $link_id, $ai_enabled ? '1' : '0');
         setSetting('link_reverse_' . $link_id, $reverse_enabled ? '1' : '0');
-        } // end slider+disclaimer pass
         
         $generated_id = $link_id;
         // 自定义短域名
@@ -136,6 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         
         addLog($link_id, 'generate');
+        } // end slider+disclaimer pass
+        
     }
 }
 ?>

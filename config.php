@@ -631,10 +631,12 @@ function getCurrentUser() {
  */
 function generateCaptchaToken() {
     if (session_status() === PHP_SESSION_NONE) session_start();
-    $token = bin2hex(random_bytes(16));
-    $_SESSION['captcha_token'] = $token;
-    $_SESSION['captcha_verified'] = false;
-    return $token;
+    if (empty($_SESSION['captcha_token'])) {
+        $token = bin2hex(random_bytes(16));
+        $_SESSION['captcha_token'] = $token;
+        $_SESSION['captcha_verified'] = false;
+    }
+    return $_SESSION['captcha_token'];
 }
 
 /**
