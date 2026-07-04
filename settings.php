@@ -18,14 +18,12 @@ $csrf = csrfToken();
 // ========== 标签切换 ==========
 $tab = $_GET['tab'] ?? 'email';
 
-// ========== 处理邮箱设置保存 ==========
-$email_saved = false;
+// ========== 处理邮箱设置保存 (PRG) ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_email') {
     requireCsrf();
     
     $enabled = ($_POST['email_enabled'] ?? '') === '1' ? '1' : '0';
     setSetting('email_enabled', $enabled);
-    error_log('[Mirror Debug] save_email: POST email_enabled=' . var_export($_POST['email_enabled'] ?? 'NULL', true) . ' => saved as ' . $enabled);
     
     if ($enabled === '1') {
         setSetting('email_smtp_host', trim($_POST['email_smtp_host'] ?? 'smtp.qq.com'));
@@ -41,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!empty($receive_addr)) setSetting('email_receive_address', $receive_addr);
     }
     
-    $email_saved = true;
+    header('Location: settings.php?tab=' . urlencode($_GET['tab'] ?? 'email') . '&saved=email');
+    exit;
 }
 
 // ========== 打赏设置保存 ==========
-$donation_saved = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_donation') {
     requireCsrf();
-    $enabled = isset($_POST['donation_enabled']) ? '1' : '0';
+    $enabled = ($_POST['donation_enabled'] ?? '0') === '1' ? '1' : '0';
     setSetting('donation_enabled', $enabled);
     
     $channels = [];
@@ -62,7 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
     setSetting('donation_channels', json_encode($channels));
-    $donation_saved = true;
+    
+    header('Location: settings.php?tab=donation&saved=donation');
+    exit;
 }
 
 // ========== 系统维护处理 ==========
@@ -188,8 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 
-// ========== 处理AI设置保存 ==========
-$ai_saved = false;
+// ========== 处理AI设置保存 (PRG) ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_ai') {
     requireCsrf();
     
@@ -212,20 +211,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // 有key就自动启用
     setSetting('ai_enabled', !empty($api_key) ? '1' : '0');
     
-    $ai_saved = true;
+    header('Location: settings.php?tab=ai&saved=ai');
+    exit;
 }
 
-$splash_saved = false;
-// ========== 🎬 处理闪屏设置保存 ==========
+// ========== 🎬 处理闪屏设置保存 (PRG) ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_splash') {
     requireCsrf();
     setSetting('splash_enabled', ($_POST['splash_enabled'] ?? '') === '1' ? '1' : '0');
-    error_log('[Mirror Debug] save_splash: POST splash_enabled=' . var_export($_POST['splash_enabled'] ?? 'NULL', true) . ' => saved as ' . (($_POST['splash_enabled'] ?? '') === '1' ? '1' : '0'));
     $img = trim($_POST['splash_image'] ?? '');
     if (!empty($img)) setSetting('splash_image', $img);
     $dur = intval($_POST['splash_duration'] ?? 3000);
     setSetting('splash_duration', strval(max(1000, min(60000, $dur))));
-    $splash_saved = true;
+    
+    header('Location: settings.php?tab=' . urlencode($_GET['tab'] ?? 'splash') . '&saved=splash');
+    exit;
 }
 
 // ========== 当前设置 ==========
@@ -610,7 +610,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 
     <?php if ($tab === 'email'): ?>
     <!-- ======================== 邮箱通知设置 ======================== -->
-    <?php if ($email_saved): ?>
+    <?php if (isset($_GET['saved']) && $_GET['saved'] === 'email'): ?>
     <div class="success-msg"><i class="fas fa-check-circle"></i> 邮箱设置已保存</div>
     <?php endif; ?>
     
@@ -670,7 +670,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 
     <?php elseif ($tab === 'donation'): ?>
     <!-- ======================== 打赏设置 ======================== -->
-    <?php if ($donation_saved): ?>
+    <?php if (isset($_GET['saved']) && $_GET['saved'] === 'donation'): ?>
     <div class="success-msg"><i class="fas fa-check-circle"></i> 打赏设置已保存</div>
     <?php endif; ?>
     
@@ -771,7 +771,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 
     <?php elseif ($tab === 'splash'): ?>
     <!-- ======================== 🎬 开屏闪屏设置 ======================== -->
-    <?php if ($splash_saved): ?>
+    <?php if (isset($_GET['saved']) && $_GET['saved'] === 'splash'): ?>
     <div class="success-msg"><i class="fas fa-check-circle"></i> 闪屏设置已保存</div>
     <?php endif; ?>
     
@@ -815,7 +815,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     </form>
     <?php elseif ($tab === 'ai'): ?>
     <!-- ======================== AI 分析设置 ======================== -->
-    <?php if ($ai_saved): ?>
+    <?php if (isset($_GET['saved']) && $_GET['saved'] === 'ai'): ?>
     <div class="success-msg"><i class="fas fa-check-circle"></i> AI 分析设置已保存</div>
     <?php endif; ?>
 
