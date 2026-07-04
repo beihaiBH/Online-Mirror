@@ -24,6 +24,16 @@
   - `login.php` 登录成功处调用 `session_set_cookie_params(2592000)` 确保 regenerated 的会话 cookie 也有30天有效期
 - **影响范围：** 全局登录状态
 
+### 🛡️ 滑块验证安全增强 (Token 方案)
+- **问题：** 滑块验证纯前端实现，`slider_pass=1` 可被 curl 等工具直接伪造绕过
+- **方案：** 自建服务端 Token 验证
+  - `config.php` 新增 `generateCaptchaToken()` / `markCaptchaVerified()` / `checkCaptchaToken()` 三个函数
+  - 每次页面加载生成随机 32 位 hex token 存入 session
+  - 滑块拖动完成时发 AJAX 请求到服务端标记 token 已验证
+  - 表单提交时服务端双重校验：`slider_pass === '1'` + `checkCaptchaToken()`
+- **涉及页面：** `index.php`（链接生成）、`login.php`（密码/邮箱登录）
+- **安全性：** 攻击者无法通过直接 POST `slider_pass=1` 绕过，必须完成真实的滑动操作
+
 ---
 
 ## v3.1.1 — 2026-07-04

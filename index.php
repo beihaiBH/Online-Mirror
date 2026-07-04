@@ -18,6 +18,20 @@ $splash_enabled = getSetting('splash_enabled') !== '0';
 $splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
 $splash_duration = intval(getSetting('splash_duration') ?: '3000');
 
+// ========== 🛡️ 滑块验证 Token ==========
+$captcha_token = generateCaptchaToken();
+
+// ========== 处理滑块验证 AJAX ==========
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'verify_captcha') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = trim($_POST['captcha_token'] ?? '');
+    if (!empty($token) && markCaptchaVerified($token)) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => '验证失败']);
+    }
+    exit;
+}
 
 // ========== 封禁IP拦截：禁止生成链接和查看内容 ==========
 if (isIPBanned()) {
@@ -60,8 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         requireCsrf();
         
-        // 服务端滑块验证
+        // 服务端滑块验证（前端 + 服务端 Token 双重校验）
         $slider_ok = isset($_POST['slider_pass']) && $_POST['slider_pass'] === '1';
+        $slider_ok = $slider_ok && checkCaptchaToken($_POST['captcha_token'] ?? '');
         $disclaimer_ok = isset($_POST['disclaimer_accepted']) && $_POST['disclaimer_accepted'] === '1';
         
         if (!$slider_ok) {
@@ -1011,6 +1026,7 @@ body {
                 <div class="sc-text" id="scText">请按住滑块拖动到最右侧</div>
             </div>
             <input type="hidden" name="slider_pass" id="sliderPass" value="0">
+            <input type="hidden" name="captcha_token" value="<?php echo $captcha_token; ?>">
         </div>
 
         <button type="button" class="btn-generate" onclick="showDisclaimer(true)">
@@ -1823,6 +1839,18 @@ function checkScComplete() {
         thumb.innerHTML = '<i class="fas fa-check"></i>';
         text.textContent = '✓ 验证通过';
         input.value = '1';
+        
+        // 🛡️ 服务端标记验证
+        var token = '<?php echo $captcha_token; ?>';
+        var formData = new FormData();
+        formData.append('action', 'verify_captcha');
+        formData.append('captcha_token', token);
+        fetch('', { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.success) console.warn('captcha verify failed');
+            })
+            .catch(function() {});
     } else {
         var thumb = document.getElementById('scThumb');
         var fill = document.getElementById('scFill');

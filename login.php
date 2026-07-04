@@ -24,6 +24,21 @@ function isEmailConfigured() {
 
 $email_configured = isEmailConfigured();
 
+// ========== 🛡️ 滑块验证 Token ==========
+$captcha_token = generateCaptchaToken();
+
+// ========== 处理滑块验证 AJAX ==========
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'verify_captcha') {
+    header('Content-Type: application/json; charset=utf-8');
+    $token = trim($_POST['captcha_token'] ?? '');
+    if (!empty($token) && markCaptchaVerified($token)) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => '验证失败']);
+    }
+    exit;
+}
+
 // ========== 发送邮箱验证码 AJAX ==========
 $vcode_sent = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'send_vcode') {
@@ -116,6 +131,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     list($login_allowed, $login_msg) = checkLoginRateLimit();
     if (!$login_allowed) {
         $error = $login_msg;
+    } elseif (!checkCaptchaToken($_POST['captcha_token'] ?? '')) {
+        $error = '请先完成滑块验证！';
+        addLog('', 'login_fail');
     } elseif ($login_tab === 'email') {
         // 邮箱验证码登录
         $vcode_email = trim($_POST['vcode_email'] ?? '');
@@ -563,6 +581,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                     <div class="sc-text" id="scTextPassword">请按住滑块拖动到最右侧</div>
                 </div>
                 <input type="hidden" name="slider_pass" id="sliderPassPassword" value="0">
+                <input type="hidden" name="captcha_token" value="<?php echo $captcha_token; ?>">
             </div>
             <button type="submit" class="btn-login" onclick="resetSliderOnSubmit();"><i class="fas fa-sign-in-alt"></i> 登 录</button>
         </form>
@@ -598,6 +617,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                     <div class="sc-text" id="scTextEmail">请按住滑块拖动到最右侧</div>
                 </div>
                 <input type="hidden" name="slider_pass" id="sliderPassEmail" value="0">
+                <input type="hidden" name="captcha_token" value="<?php echo $captcha_token; ?>">
             </div>
             <button type="submit" class="btn-login" id="vcodeLoginBtn"><i class="fas fa-sign-in-alt"></i> 验证并登录</button>
         </form>
@@ -793,6 +813,18 @@ function checkDragComplete() {
         thumb.innerHTML = '<i class="fas fa-check"></i>';
         text.textContent = '✓ 验证通过';
         input.value = '1';
+        
+        // 🛡️ 服务端标记验证
+        var token = '<?php echo $captcha_token; ?>';
+        var formData = new FormData();
+        formData.append('action', 'verify_captcha');
+        formData.append('captcha_token', token);
+        fetch('', { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.success) console.warn('captcha verify failed');
+            })
+            .catch(function() {});
     } else {
         // 重置
         var thumb = document.getElementById('scThumb' + suffix);

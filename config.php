@@ -623,6 +623,43 @@ function getCurrentUser() {
 }
 
 /**
+ * 🛡️ 生成滑块验证 Token（存 session）
+ */
+function generateCaptchaToken() {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $token = bin2hex(random_bytes(16));
+    $_SESSION['captcha_token'] = $token;
+    $_SESSION['captcha_verified'] = false;
+    return $token;
+}
+
+/**
+ * 🛡️ 服务端标记验证已通过
+ */
+function markCaptchaVerified($token) {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (!empty($_SESSION['captcha_token']) && $_SESSION['captcha_token'] === $token) {
+        $_SESSION['captcha_verified'] = true;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * 🛡️ 校验滑块验证 Token
+ */
+function checkCaptchaToken($token) {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (empty($_SESSION['captcha_token']) || empty($_SESSION['captcha_verified'])) {
+        return false;
+    }
+    if ($_SESSION['captcha_token'] !== $token) {
+        return false;
+    }
+    return $_SESSION['captcha_verified'] === true;
+}
+
+/**
  * 要求登录（含CSRF初始化）
  */
 function requireLogin() {
