@@ -151,6 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             $user = $stmt->fetch();
                             
                             if ($user) {
+                                // 登录后会话保持30天
+                                session_set_cookie_params(2592000);
                                 session_regenerate_id(true);
                                 $_SESSION['user_id'] = $user['id'];
                                 $_SESSION['username'] = $user['username'];
@@ -185,6 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $user = $stmt->fetch();
                 
                 if ($user && $password === $user['password']) {
+                    // 登录后会话保持30天
+                    session_set_cookie_params(2592000);
                     session_regenerate_id(true);
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];

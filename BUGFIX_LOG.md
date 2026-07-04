@@ -17,6 +17,13 @@
 - **修复：** 将 `isset($_POST['splash_enabled'])` 改为 `($_POST['splash_enabled'] ?? '') === '1'`
 - **影响范围：** 后台系统设置 - 开屏闪屏 Tab
 
+### 🔧 Bug 4：管理员退出后台后需重新登录
+- **问题：** PHP 默认 `session.cookie_lifetime=0`（浏览器关闭即过期）+ `session.gc_maxlifetime=1440`（24分钟无操作即失效），导致管理员频繁被踢出登录
+- **修复：** 
+  - `config.php` 加入 `ini_set('session.cookie_lifetime', 2592000)` 和 `ini_set('session.gc_maxlifetime', 2592000)`（30天）
+  - `login.php` 登录成功处调用 `session_set_cookie_params(2592000)` 确保 regenerated 的会话 cookie 也有30天有效期
+- **影响范围：** 全局登录状态
+
 ---
 
 ## v3.1.1 — 2026-07-04
