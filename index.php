@@ -1672,6 +1672,19 @@ function toggleField(type) {
         }
     }
     
+    // 邮箱通知特殊处理：管理员未配置时弹出提示
+    if (type === 'email') {
+        <?php if (getSetting('email_enabled') !== '1'): ?>
+        if (btn.classList.contains('on')) {
+            setTimeout(function() {
+                btn.classList.remove('on');
+                field.classList.remove('show');
+                showToast('⚠️ 管理员尚未配置邮箱通知，请联系管理员在后台设置', false);
+            }, 100);
+        }
+        <?php endif; ?>
+    }
+    
     // v3.0 AI & 反向图搜特殊处理
     if (type === 'ai') {
         var aiInput = document.getElementById('aiEnabledInput');

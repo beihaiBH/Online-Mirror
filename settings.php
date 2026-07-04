@@ -18,7 +18,7 @@ $email_saved = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_email') {
     requireCsrf();
     
-    $enabled = isset($_POST['email_enabled']) ? '1' : '0';
+    $enabled = ($_POST['email_enabled'] ?? '') === '1' ? '1' : '0';
     setSetting('email_enabled', $enabled);
     
     if ($enabled === '1') {
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // ========== 🎬 处理闪屏设置保存 ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_splash') {
     requireCsrf();
-    setSetting('splash_enabled', isset($_POST['splash_enabled']) ? '1' : '0');
+    setSetting('splash_enabled', ($_POST['splash_enabled'] ?? '') === '1' ? '1' : '0');
     $img = trim($_POST['splash_image'] ?? '');
     if (!empty($img)) setSetting('splash_image', $img);
     $dur = intval($_POST['splash_duration'] ?? 3000);
