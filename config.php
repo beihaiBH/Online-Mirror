@@ -11,9 +11,13 @@ define('DB_NAME', getenv('DB_NAME') ?: 'mirror');
 define('IMG_DIR', __DIR__ . '/img/');
 define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/mirror/');
 
-// ========== 🔒 会话设置：登录后保持30天 ==========
-ini_set('session.cookie_lifetime', 2592000);
-ini_set('session.gc_maxlifetime', 2592000);
+
+
+// ========== 🔒 会话设置：登录后保持30天（仅在session未启动时生效）==========
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_lifetime', 2592000);
+    ini_set('session.gc_maxlifetime', 2592000);
+}
 
 // ========== 🔒 安全增强 ==========
 // 安全响应头

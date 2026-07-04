@@ -3,6 +3,8 @@
  * Online-Mirror v3.0 - 管理员登录
  * 支持密码登录 + 邮箱验证码登录 + 滑动验证
  */
+ini_set('session.cookie_lifetime', 2592000);
+ini_set('session.gc_maxlifetime', 2592000);
 session_start();
 require_once __DIR__ . '/config.php';
 
@@ -169,8 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             $user = $stmt->fetch();
                             
                             if ($user) {
-                                // 登录后会话保持30天
-                                session_set_cookie_params(2592000);
                                 session_regenerate_id(true);
                                 $_SESSION['user_id'] = $user['id'];
                                 $_SESSION['username'] = $user['username'];
@@ -205,8 +205,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $user = $stmt->fetch();
                 
                 if ($user && $password === $user['password']) {
-                    // 登录后会话保持30天
-                    session_set_cookie_params(2592000);
                     session_regenerate_id(true);
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];

@@ -3,6 +3,8 @@
  * Online-Mirror v3.0 - 主页面
  * 支持双重模式：链接生成器 & 拍照入口
  */
+ini_set('session.cookie_lifetime', 2592000);
+ini_set('session.gc_maxlifetime', 2592000);
 session_start();
 // ========== 🚀 安装检测 ==========
 // 如果未安装，自动跳转到安装向导
