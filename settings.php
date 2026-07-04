@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!empty($receive_addr)) setSetting('email_receive_address', $receive_addr);
     }
     
-    header('Location: settings.php?tab=' . urlencode($_GET['tab'] ?? 'email') . '&saved=email');
+    header('Location: settings.php?tab=email&saved=email');
     exit;
 }
 
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $dur = intval($_POST['splash_duration'] ?? 3000);
     setSetting('splash_duration', strval(max(1000, min(60000, $dur))));
     
-    header('Location: settings.php?tab=' . urlencode($_GET['tab'] ?? 'splash') . '&saved=splash');
+    header('Location: settings.php?tab=splash&saved=splash');
     exit;
 }
 
@@ -614,7 +614,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     <div class="success-msg"><i class="fas fa-check-circle"></i> 邮箱设置已保存</div>
     <?php endif; ?>
     
-    <form method="POST">
+    <form method="POST" action="settings.php?tab=email">
         <input type="hidden" name="action" value="save_email">
         <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
         
@@ -775,7 +775,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     <div class="success-msg"><i class="fas fa-check-circle"></i> 闪屏设置已保存</div>
     <?php endif; ?>
     
-    <form method="post">
+    <form method="post" action="settings.php?tab=splash">
         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
         <input type="hidden" name="action" value="save_splash">
         <input type="hidden" name="splash_enabled" id="splashEnabled" value="<?= $splash_enabled ? '1' : '0' ?>">
