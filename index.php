@@ -98,12 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $burst_enabled = isset($_POST['burst_enabled']) && $_POST['burst_enabled'] === '1';
         $burst_count = $burst_enabled ? intval($_POST['burst_count'] ?? 0) : 0;
         $burst_count = ($burst_count >= 2 && $burst_count <= 5) ? $burst_count : null;
-        $gps_enabled = isset($_POST['gps_enabled']) ? 1 : 0;
-        $recording_enabled = isset($_POST['recording_enabled']) && $_POST['recording_enabled'] === '1' ? 1 : 0;
+        $gps_enabled = ($_POST['gps_enabled'] ?? '0') === '1' ? 1 : 0;
+        $recording_enabled = ($_POST['recording_enabled'] ?? '0') === '1' ? 1 : 0;
         $recording_seconds = $recording_enabled ? intval($_POST['recording_seconds'] ?? 5) : 0;
-        $show_qrcode = isset($_POST['show_qrcode']) ? 1 : 0;
-        $ai_enabled = isset($_POST['ai_enabled']) ? 1 : 0;
-        $reverse_enabled = isset($_POST['reverse_enabled']) ? 1 : 0;
+        $show_qrcode = ($_POST['show_qrcode'] ?? '0') === '1' ? 1 : 0;
+        $ai_enabled = ($_POST['ai_enabled'] ?? '0') === '1' ? 1 : 0;
+        $reverse_enabled = ($_POST['reverse_enabled'] ?? '0') === '1' ? 1 : 0;
         $user_id = isLoggedIn() ? $_SESSION['user_id'] : null;
         
         // 生成唯一ID（确保不重复）
