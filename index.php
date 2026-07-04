@@ -15,6 +15,11 @@ if (!file_exists(__DIR__ . '/installed.lock')) {
 
 require_once __DIR__ . '/config.php';
 
+// 🚫 禁止浏览器缓存
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+
 // ========== 🎬 闪屏设置 ==========
 $splash_enabled = getSetting('splash_enabled') !== '0';
 $splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
