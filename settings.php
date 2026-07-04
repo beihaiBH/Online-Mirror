@@ -210,6 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $ai_saved = true;
 }
 
+$splash_saved = false;
 // ========== 🎬 处理闪屏设置保存 ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_splash') {
     requireCsrf();
@@ -245,7 +246,6 @@ $ai_model = $ai_settings['model'];
 $splash_enabled = getSetting('splash_enabled') !== '0';
 $splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
 $splash_duration = intval(getSetting('splash_duration') ?: '3000');
-$splash_saved = false;
 $ai_api_key = getSetting('ai_api_key') ?: '';
 $ai_has_key = !empty($ai_api_key);
 $ai_prompt = $ai_settings['prompt'];
