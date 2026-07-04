@@ -1180,17 +1180,10 @@ function toggleEmail() {
     var btn = document.getElementById('toggleBtn');
     var fields = document.getElementById('emailFields');
     var input = document.getElementById('emailEnabled');
+    btn.classList.toggle('on');
     var isOn = btn.classList.contains('on');
-    
-    if (isOn) {
-        btn.classList.remove('on');
-        fields.style.display = 'none';
-        input.value = '0';
-    } else {
-        btn.classList.add('on');
-        fields.style.display = 'block';
-        input.value = '1';
-    }
+    if (fields) fields.style.display = isOn ? 'block' : 'none';
+    input.value = isOn ? '1' : '0';
 }
 
 // 🎬 闪屏预览
