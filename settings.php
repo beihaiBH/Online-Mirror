@@ -623,7 +623,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 邮箱通知
                 <small>新拍照时自动发送邮件</small>
             </div>
-            <button type="button" class="toggle <?php echo $email_enabled ? 'on' : ''; ?>" id="toggleBtn" onclick="toggleEmail()">
+            <button type="button" class="toggle <?php echo $email_enabled ? 'on' : ''; ?>" id="emailToggleBtn" onclick="toggleEmail()">
                 <div class="knob"></div>
             </button>
         </div>
@@ -667,6 +667,18 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         
         <button type="submit" class="btn-save"><i class="fas fa-save"></i> 保存邮箱设置</button>
     </form>
+    
+    <script>
+    function toggleEmail() {
+        var btn = document.getElementById('emailToggleBtn');
+        var fields = document.getElementById('emailFields');
+        var input = document.getElementById('emailEnabled');
+        btn.classList.toggle('on');
+        var isOn = btn.classList.contains('on');
+        if (fields) fields.style.display = isOn ? 'block' : 'none';
+        input.value = isOn ? '1' : '0';
+    }
+    </script>
 
     <?php elseif ($tab === 'donation'): ?>
     <!-- ======================== 打赏设置 ======================== -->
@@ -1176,15 +1188,6 @@ function toggleSplash() {
     }
 }
 
-function toggleEmail() {
-    var btn = document.getElementById('toggleBtn');
-    var fields = document.getElementById('emailFields');
-    var input = document.getElementById('emailEnabled');
-    btn.classList.toggle('on');
-    var isOn = btn.classList.contains('on');
-    if (fields) fields.style.display = isOn ? 'block' : 'none';
-    input.value = isOn ? '1' : '0';
-}
 
 // 🎬 闪屏预览
 function previewSplash() {
