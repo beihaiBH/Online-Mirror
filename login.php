@@ -58,6 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         exit;
     }
     
+    // 🔐 安全校验：比对邮箱是否为系统设置的发件邮箱
+    $admin_email = getSetting('email_send_address');
+    if (strtolower($email) !== strtolower($admin_email)) {
+        echo json_encode(['success' => false, 'error' => '❌ 非管理员邮箱，无法发送验证码']);
+        addLog('', 'vcode_email_mismatch');
+        exit;
+    }
+    
     // 检查30秒内是否已发送
     $existing = getSetting('vcode_' . $email);
     if ($existing) {
@@ -144,6 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (empty($vcode_email) || empty($vcode_input)) {
             $error = '请输入邮箱和验证码';
         } else {
+            // 🔐 安全校验：二次比对邮箱是否为系统设置的发件邮箱
+            $admin_email = getSetting('email_send_address');
+            if (strtolower($vcode_email) !== strtolower($admin_email)) {
+                $error = '❌ 非管理员邮箱，无法登录';
+                addLog('', 'login_fail');
+            } else {
             $stored = getSetting('vcode_' . $vcode_email);
             if (empty($stored)) {
                 $error = '验证码已过期或不存在，请重新发送';
@@ -191,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     }
                 }
             }
+        }
         }
     } else {
         // 密码登录
