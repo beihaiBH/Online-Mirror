@@ -815,6 +815,72 @@ body {
     color:#a0a0b8;
     font-size:12px;
 }
+.log-body .log-bug .log-level.low {
+    background:rgba(76,175,80,0.15);
+    color:#4caf50;
+}
+.log-body .log-detail {
+    margin-top:8px;
+}
+.log-body .log-item {
+    display:flex;
+    align-items:flex-start;
+    gap:6px;
+    padding:4px 0;
+    font-size:12px;
+    line-height:1.7;
+}
+.log-body .log-item .log-label {
+    color:#667eea;
+    font-weight:600;
+    white-space:nowrap;
+    flex-shrink:0;
+    min-width:max-content;
+}
+.log-body .log-item .log-value {
+    color:#b0b0c8;
+}
+.log-body .log-item-sub {
+    display:flex;
+    align-items:flex-start;
+    gap:4px;
+    padding:2px 0 2px 16px;
+    font-size:12px;
+    line-height:1.7;
+}
+.log-body .log-item-sub .log-label-sub {
+    color:#ff9800;
+    font-weight:500;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+.log-body .log-item-sub .log-value {
+    color:#a0a0b8;
+}
+.log-body .log-text {
+    color:#a0a0b8;
+    font-size:12px;
+    line-height:1.7;
+    margin:4px 0;
+}
+.log-body .log-spacer {
+    height:2px;
+}
+.log-body .log-code {
+    background:rgba(102,126,234,0.12);
+    color:#b388ff;
+    padding:1px 6px;
+    border-radius:4px;
+    font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+    font-size:11px;
+}
+.log-body .log-link {
+    color:#667eea;
+    text-decoration:none;
+}
+.log-body .log-link:hover {
+    text-decoration:underline;
+}
 .log-body .log-footer-note {
     margin-top:24px;
     padding:12px 16px;
@@ -2084,7 +2150,7 @@ function checkScComplete() {
             <h3>
                 <i class="fas fa-bandage" style="color:#ff7e7e;"></i>
                 修复日志
-                <span class="badge-new">v4.0.3</span>
+                <span class="badge-new">v4.0.2</span>
             </h3>
             <button class="log-close" onclick="closeFixLog()"><i class="fas fa-times"></i></button>
         </div>
@@ -2161,35 +2227,42 @@ function renderFixLog(md) {
         for (var j = 0; j < bugs.length; j++) {
             var bug = bugs[j].trim();
             if (!bug || bug.indexOf('Bug') !== 0) {
-                // 普通文本，直接渲染
-                html += '<p style="color:#a0a0b8;font-size:12px;line-height:1.6;margin:4px 0;">' + escapeHtml(bug) + '</p>';
+                // 普通段落，渲染为说明文字
+                if (bug) {
+                    html += '<p class="log-text">' + renderInline(bug) + '</p>';
+                }
                 continue;
             }
             
             var bLines = bug.split('\n');
             var bTitle = bLines[0] || '';
             bLines.shift();
-            var bContent = bLines.join('<br>').trim();
+            var bRest = bLines.join('\n').trim();
             
-            var isSev = false;
+            // 判断严重等级
             var sevClass = '';
             if (bTitle.indexOf('严重') !== -1 || bTitle.indexOf('⚠️') !== -1) {
                 sevClass = 'critical';
-                isSev = true;
             } else if (bTitle.indexOf('⚡') !== -1 || bTitle.indexOf('中等') !== -1) {
                 sevClass = 'medium';
-                isSev = true;
+            } else if (bTitle.indexOf('轻微') !== -1 || bTitle.indexOf('🟢') !== -1) {
+                sevClass = 'low';
             }
             
             var sevLabel = '';
-            if (sevClass) {
-                var labelText = sevClass === 'critical' ? '⚠️ 严重' : '⚡ 中等';
-                sevLabel = '<span class="log-level ' + sevClass + '">' + labelText + '</span>';
+            if (sevClass === 'critical') {
+                sevLabel = '<span class="log-level critical">⚠️ 严重</span>';
+            } else if (sevClass === 'medium') {
+                sevLabel = '<span class="log-level medium">⚡ 中等</span>';
+            } else if (sevClass === 'low') {
+                sevLabel = '<span class="log-level low">🟢 轻微</span>';
             }
             
             html += '<div class="log-bug ' + sevClass + '">';
-            html += sevLabel + '<h4>' + escapeHtml(bTitle) + '</h4>';
-            html += '<p>' + escapeHtml(bContent.replace(/<br>/g, '\n')).replace(/\n/g, '<br>') + '</p>';
+            html += sevLabel + '<h4>' + renderInline(bTitle) + '</h4>';
+            
+            // 渲染列表项：- **标签:** 内容
+            html += renderBugContent(bRest);
             html += '</div>';
         }
     }
@@ -2201,6 +2274,93 @@ function renderFixLog(md) {
     html += '</div>';
     
     return html;
+}
+
+// 渲染 Bug 内容（列表项）
+function renderBugContent(text) {
+    if (!text) return '';
+    var html = '<div class="log-detail">';
+    var lines = text.split('\n');
+    
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+        
+        // 跳过空行
+        if (!trimmed) {
+            html += '<div class="log-spacer"></div>';
+            continue;
+        }
+        
+        // 主列表项：- **标签:** 内容
+        var mainMatch = trimmed.match(/^-\s+\*\*(.+?)\*\*[:：]\s*(.*)/);
+        if (mainMatch) {
+            var label = renderInline(mainMatch[1]);
+            var value = renderInline(mainMatch[2]);
+            html += '<div class="log-item">';
+            html += '<span class="log-label">' + label + '</span>';
+            if (value) html += '<span class="log-value">' + value + '</span>';
+            html += '</div>';
+            continue;
+        }
+        
+        // 子列表项（以 - 开头但不是 **label:** 格式）
+        var subMatch = trimmed.match(/^[\s]*[-•]\s+(.*)/);
+        if (subMatch) {
+            var txt = subMatch[1];
+            // 检查是否是 冒号分隔的键值对
+            var kvMatch = txt.match(/^(.+?)[：:](\s*)(.*)/);
+            if (kvMatch && kvMatch[1].length < 30) {
+                var key = renderInline(kvMatch[1]);
+                var val = renderInline(kvMatch[3]);
+                html += '<div class="log-item-sub">';
+                html += '<span class="log-label-sub">' + key + '</span>';
+                if (val) html += '<span class="log-value">' + val + '</span>';
+                html += '</div>';
+            } else {
+                html += '<div class="log-item-sub"><span class="log-value">' + renderInline(txt) + '</span></div>';
+            }
+            continue;
+        }
+        
+        // 普通段落
+        if (trimmed) {
+            html += '<div class="log-text">' + renderInline(trimmed) + '</div>';
+        }
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 渲染行内标记：代码、粗体、链接
+function renderInline(text) {
+    if (!text) return '';
+    // 转义 HTML
+    var s = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    // 行内代码 `code` → 先保护起来
+    var codes = [];
+    s = s.replace(/`([^`]+)`/g, function(m, c) {
+        codes.push(c);
+        return '\x00CODE' + (codes.length - 1) + '\x00';
+    });
+    
+    // 粗体 **text**
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    // 链接 [text](url)
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="log-link">$1</a>');
+    
+    // 恢复代码
+    s = s.replace(/\x00CODE(\d+)\x00/g, function(m, d) {
+        return '<code class="log-code">' + codes[parseInt(d)] + '</code>';
+    });
+    
+    return s;
 }
 
 function escapeHtml(str) {
