@@ -1,5 +1,53 @@
 # 🐛 修复记录
 
+## v4.0.2 — 2026-07-23
+
+### 🔧 Bug 10：站点 URL 路径硬编码 - 独立域名下生成链接路径错误
+- **问题等级：** ⚠️ 中等 — 使用独立域名（如 `mirror.lgnb.asia`）部署时，生成的分享链接和资源路径多了一级 `/mirror/` 前缀，导致链接无法访问
+- **原因：** `config.php` 中 `SITE_URL` 常量硬编码为 `/mirror/` 前缀，未考虑独立域名部署场景（文档根目录直接指向项目目录）
+- **修复：**
+  - `config.php`：`SITE_URL` 改为通过 `__FILE__` 与 `DOCUMENT_ROOT` 自动检测基础路径，兼容子目录和独立域名两种部署
+  - 新增 `BASE_PATH` 常量，所有硬编码 `/mirror/` 路径均替换为 `BASE_PATH` 拼接
+- **涉及文件：** `config.php`、`index.php`、`settings.php`
+- **影响范围：** 所有使用独立域名部署的站点
+
+### 🔧 Bug 11：首页 Gitee 图标异常 - 占位 SVG 图标未被正确替换
+- **问题等级：** 🟢 轻微 — Gitee 按钮使用了通用占位 SVG，未显示 Gitee 品牌 Logo
+- **原因：** 首页底部 Gitee 链接的内嵌 SVG 为通用路径占位符，缺少 Gitee 品牌标识
+- **修复：** 替换为正确的 Gitee 品牌 Logo SVG（圆形红底白字 Gitee 图标），并调整尺寸与对齐样式
+- **涉及文件：** `index.php`
+- **影响范围：** 首页底部社交链接 - Gitee 按钮
+
+### 🔧 Bug 12：双域名兼容 - 子域名 + 子目录两种部署路径 BUG
+- **问题等级：** ⚡ 中等 — 同时使用 `mirror.lgnb.asia`（独立子域名）和 `lgnb.asia/mirror/`（子目录）两种方式访问时，Clean URL 跳转路径错误
+- **原因：**
+  - `index.php` 中安装检测跳转和拍照模式跳转的 `header('Location: ...')` 使用了绝对路径，未拼接站点基础路径
+  - `login.php` 退出登录跳转的 `Location: /` 在子目录部署下会回到根域名而非站点目录
+  - nginx `lgnb.asia` 主站配置缺少 `/mirror/` 子目录的 Clean URL 重写规则，导致访问 `lgnb.asia/mirror/capture/xxx` 等路径返回 404
+- **修复：**
+  - `index.php`：安装检测跳转和 capture 跳转全部拼接 BASE_PATH
+  - `login.php`：退出跳转改为 `BASE_PATH . '/'`
+  - nginx 配置：`lgnb.asia` 主站 server block 新增 `/mirror/` 子目录的所有 Clean URL 重写规则（capture、photos、admin、login、settings、install、export、api、fixlog）
+- **涉及文件：** `index.php`、`login.php`、`nginx.conf`
+- **影响范围：** 所有通过子目录方式访问的部署
+
+### 🔧 Bug 13：后台首页按钮路径错误 - 子目录部署下跳转到根域名首页
+- **问题等级：** ⚡ 中等 — 子目录部署（如 `lgnb.asia/mirror/`）时，后台点击「首页」按钮跳转到 `https://lgnb.asia/`（根域名首页），而非站点首页《mirror》
+- **原因：** `dashboard.php` 中首页链接使用 `href="/"` 硬编码绝对根路径，未拼接站点基础路径
+- **修复：** 改为 `href="<?= BASE_PATH ?>/"`，动态适配子域名和子目录两种部署
+- **涉及文件：** `dashboard.php`
+- **影响范围：** 所有通过子目录访问管理后台的用户
+
+### 🔧 Bug 14：后台照片加载失败 - 图片路径和 AJAX 请求路径错误
+- **问题等级：** ⚠️ 严重 — 管理后台和照片查看页面的图片无法加载，连拍表单提交和 AI 分析请求 404
+- **原因：** 多处硬编码相对路径和绝对路径，未拼接站点基础路径：
+  - `dashboard.php`：JS 中照片缩略图 `src="img/xxx"` 在当前页目录下查找，路径错误
+  - `photos.php`：照片大图 `img/xxx`、录音文件 `uploads/recordings/xxx`、AI 分析 AJAX 请求 `api/ai-analyze` 均为相对路径
+  - `capture.php`：表单提交 `action="/capture/save"` 和连拍 XHR 请求 `/capture/save` 为绝对路径，未带站点前缀
+- **修复：** 所有图片/音频/API 请求路径均拼接 `BASE_PATH` 前缀
+- **涉及文件：** `dashboard.php`、`photos.php`、`capture.php`
+- **影响范围：** 所有通过子域名或子目录部署下查看照片和管理后台的用户
+
 ## v4.0 — 2026-07-23
 
 ### 🔧 Bug 7：连拍模式N+1 - 表单重复提交多拍一张
