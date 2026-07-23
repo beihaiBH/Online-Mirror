@@ -547,15 +547,15 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         <?php foreach ($photos as $photo): ?>
         <div class="photo-card">
             <div class="img-wrap">
-                <a href="img/<?php echo htmlspecialchars($photo['file_path']); ?>" class="spotlight" data-spotlight="photos">
-                    <img src="img/<?php echo htmlspecialchars($photo['file_path']); ?>" alt="照片" loading="lazy">
+                <a href="<?= BASE_PATH ?>/img/<?php echo htmlspecialchars($photo['file_path']); ?>" class="spotlight" data-spotlight="photos">
+                    <img src="<?= BASE_PATH ?>/img/<?php echo htmlspecialchars($photo['file_path']); ?>" alt="照片" loading="lazy">
                 </a>
             </div>
             <div class="info">
                 <div class="row">
                     <span><i class="far fa-clock"></i> <?php echo date('m-d H:i', strtotime($photo['created_at'])); ?></span>
                     <span>
-                        <a href="img/<?php echo htmlspecialchars($photo['file_path']); ?>" download class="download-btn"><i class="fas fa-download"></i></a>
+                        <a href="<?= BASE_PATH ?>/img/<?php echo htmlspecialchars($photo['file_path']); ?>" download class="download-btn"><i class="fas fa-download"></i></a>
                         <?php if (isLoggedIn()): ?>
                         <a href="?id=<?php echo urlencode($id); ?>&type=delete&photo_id=<?php echo $photo['id']; ?>&csrf_token=<?php echo $csrf; ?>" class="del-btn" onclick="return confirm('删除这张照片？')"><i class="fas fa-times"></i></a>
                         <?php endif; ?>
@@ -584,7 +584,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 <?php if ($photo['recording_seconds'] > 0): ?><span class="tag"><i class="fas fa-microphone"></i> 录音 <?php echo intval($photo['recording_seconds']); ?>秒</span><?php endif; ?>
                 <?php if ($photo['recording_file_path']): ?>
                 <span class="tag" style="background:rgba(156,39,176,0.15);border-color:rgba(156,39,176,0.25);padding:2px 6px;"><i class="fas fa-play-circle" style="color:#ce93d8;"></i>
-                <audio controls preload="none" style="height:32px;width:170px;vertical-align:middle;border-radius:6px;" src="uploads/recordings/<?php echo htmlspecialchars($photo['recording_file_path']); ?>"></audio></span>
+                <audio controls preload="none" style="height:32px;width:170px;vertical-align:middle;border-radius:6px;" src="<?= BASE_PATH ?>/uploads/recordings/<?php echo htmlspecialchars($photo['recording_file_path']); ?>"></audio></span>
                 <?php endif; ?>
             </div>
             <?php endif; ?>
@@ -716,7 +716,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         formData.append('link_id', '<?php echo htmlspecialchars($id); ?>');
         formData.append('photo_path', photoPath);
         
-        fetch('api/ai-analyze', {
+        fetch('<?= BASE_PATH ?>/api/ai-analyze', {
             method: 'POST',
             body: formData
         })

@@ -10,6 +10,7 @@ define('DB_PASS', '{{DB_PASS}}');
 define('DB_NAME', '{{DB_NAME}}');
 define('IMG_DIR', __DIR__ . '/img/');
 define('SITE_PATH', '{{SITE_PATH}}');
+define('BASE_PATH', rtrim('{{SITE_PATH}}', '/'));
 define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '{{SITE_PATH}}');
 
 // ========== 🔒 安全响应头 ==========

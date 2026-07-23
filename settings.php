@@ -249,7 +249,7 @@ $ai_model = $ai_settings['model'];
 
 // 🎬 闪屏设置
 $splash_enabled = getSetting('splash_enabled') !== '0';
-$splash_image = getSetting('splash_image') ?: '/mirror/splash_default.png';
+$splash_image = getSetting('splash_image') ?: BASE_PATH . '/splash_default.png';
 $splash_duration = intval(getSetting('splash_duration') ?: '3000');
 $ai_api_key = getSetting('ai_api_key') ?: '';
 $ai_has_key = !empty($ai_api_key);
@@ -1191,7 +1191,7 @@ function toggleSplash() {
 
 // 🎬 闪屏预览
 function previewSplash() {
-    var img = document.querySelector('input[name="splash_image"]').value || '/mirror/splash_default.png';
+    var img = document.querySelector('input[name="splash_image"]').value || '<?= BASE_PATH ?>/splash_default.png';
     var dur = parseInt(document.querySelector('input[name="splash_duration"]').value) || 2500;
     
     var overlay = document.createElement('div');

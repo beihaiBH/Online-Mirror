@@ -12,7 +12,7 @@ require_once __DIR__ . '/config.php';
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     $_SESSION = [];
     session_destroy();
-    header('Location: /');
+    header('Location: ' . BASE_PATH . '/');
     exit;
 }
 

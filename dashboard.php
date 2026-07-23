@@ -446,7 +446,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 <div class="topbar">
     <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v4.0</div>
     <div class="nav">
-        <a href="/"><i class="fas fa-home"></i> 首页</a>
+        <a href="<?= BASE_PATH ?>/" class="home-link"><i class="fas fa-home"></i> 首页</a>
         <a href="admin" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
         <a href="export" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
         <a href="settings" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
@@ -597,7 +597,7 @@ function loadMorePhotos() {
                 const div = document.createElement('div');
                 div.className = 'photo-mini';
                 div.innerHTML = '<a href="photos/' + encodeURIComponent(p.link_id) + '">' +
-                    '<img src="img/' + p.file_path + '" alt="照片" loading="lazy"></a>' +
+                    '<img src="<?= BASE_PATH ?>/img/' + p.file_path + '" alt="照片" loading="lazy"></a>' +
                     '<div class="info">' +
                     '<div><i class="far fa-clock"></i> ' + p.created_at + '</div>' +
                     '<div style="font-size:10px;color:#606080;">ID: ' + p.link_id + '</div></div>';

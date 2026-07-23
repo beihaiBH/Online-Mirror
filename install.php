@@ -202,6 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                         . "define('DB_NAME', '{$db_name}');\n"
                         . "define('IMG_DIR', __DIR__ . '/img/');\n"
                         . "define('SITE_PATH', '{$site_path}');\n"
+                        . "define('BASE_PATH', rtrim('{$site_path}', '/'));\n"
                         . "define('SITE_URL', (isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . \$_SERVER['HTTP_HOST'] . '{$site_path}');\n\n"
                         . "// ========== 🔒 安全响应头 ==========\n"
                         . "header('X-Content-Type-Options: nosniff');\n"
