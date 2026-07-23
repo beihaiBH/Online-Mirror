@@ -1,3 +1,21 @@
-installed.lock
-*.bak
+# 🔒 敏感配置
 config.php
+installed.lock
+
+# 📁 上传文件
+uploads/*
+img/*.jpg
+img/*.png
+img/*.gif
+img/*.webp
+img/*.jpeg
+
+# 🔧 备份文件
+*.bak
+*.old
+*.backup
+
+# 🖥️ 系统文件
+.DS_Store
+Thumbs.db
+.nfs*

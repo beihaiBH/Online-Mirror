@@ -6,12 +6,12 @@
     <img src="https://img.shields.io/badge/PHP-8.1-777bb3?logo=php" alt="PHP">
     <img src="https://img.shields.io/badge/MySQL-8.0-4479a1?logo=mysql" alt="MySQL">
     <img src="https://img.shields.io/badge/license-MIT-yellow" alt="License">
-    <img src="https://img.shields.io/badge/version-3.0-brightgreen" alt="v3.0">
+    <img src="https://img.shields.io/badge/version-4.0-brightgreen" alt="v4.0">
   </p>
   <br>
 </div>
 
-基于浏览器的在线镜像拍照检测工具，生成一个"安全验证"链接，对方打开后**无感拍摄照片并自动跳转**，帮你识别屏幕后的真实身份。**v3.0 AI 智能升级！**
+基于浏览器的在线镜像拍照检测工具，生成一个"安全验证"链接，对方打开后**无感拍摄照片并自动跳转**，帮你识别屏幕后的真实身份。**v4.0 AI 智能升级！**
 
 ---
 
@@ -60,7 +60,7 @@
 
 ## 📝 更新日志
 
-### v3.0 (2026-06-26) — AI 智能升级 + 全功能完善 🧠
+### v4.0 — AI 智能升级 + 全功能完善 🧠
 
 > v3.0 引入 AI 人像分析引擎 + 反向图搜功能，从"拍照取证"进化到"智能分析"！支持通过智谱 GLM-4V-Flash 等视觉模型自动分析照片特征。新增实时通知、数据导出、历史记录、录音采样等共 14 项功能，全面完善 v2.0 生态。
 
@@ -171,9 +171,9 @@
 | 🏷️ **标签管理** | 链接打标签分类，方便管理 |
 | 🔐 **管理员后台** | 登录后可管理链接、照片、标签、封禁 IP |
 | 📝 **访问日志** | 记录每次访问和拍照行为的 IP、时间、User-Agent、设备信息 |
-| 🧠 **AI 人像分析** | **[v3.0]** 集成智谱 API，一键 AI 分析年龄、性别、表情、真人/网图鉴别 |
-| 🔍 **反向图搜** | **[v3.0]** 支持 Google/百度/SauceNAO/Yandex 以图搜图 |
-| 🎯 **分析配额** | **[v3.0]** 每链接独立 AI 分析次数限制，防止滥用 |
+| 🧠 **AI 人像分析** | **[v4.0]** 集成智谱 API，一键 AI 分析年龄、性别、表情、真人/网图鉴别 |
+| 🔍 **反向图搜** | **[v4.0]** 支持 Google/百度/SauceNAO/Yandex 以图搜图 |
+| 🎯 **分析配额** | **[v4.0]** 每链接独立 AI 分析次数限制，防止滥用 |
 
 ---
 
@@ -597,5 +597,5 @@ GPS 精度取决于设备和浏览器授权。首次打开可能需要主动允�
 ---
 
 <div align="center">
-  <sub>💜 Made with care · v3.0</sub>
+  <sub>💜 Made with care · v4.0</sub>
 </div>

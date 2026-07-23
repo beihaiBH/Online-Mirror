@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 管理员登录
+ * Online-Mirror v4.0 - 管理员登录
  * 支持密码登录 + 邮箱验证码登录 + 滑动验证
  */
 ini_set('session.cookie_lifetime', 2592000);
@@ -12,7 +12,7 @@ require_once __DIR__ . '/config.php';
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     $_SESSION = [];
     session_destroy();
-    header('Location: index.php');
+    header('Location: /');
     exit;
 }
 
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <p style="color:#8080a0;font-size:12px;margin:0;">验证码有效期为5分钟，请勿泄露给他人。</p>
 </div>
 <div style="padding:12px 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);">
-<p style="margin:0;font-size:11px;color:#606080;">网恋照妖镜 v3.0 · 自动发送</p>
+<p style="margin:0;font-size:11px;color:#606080;">网恋照妖镜 v4.0 · 自动发送</p>
 </div>
 </div>
 </center>
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                 // 清除已使用的验证码
                                 setSetting('vcode_' . $vcode_email, '');
                                 addLog('', 'login_success');
-                                header('Location: dashboard.php');
+                                header('Location: admin');
                                 exit;
                             } else {
                                 $error = '未找到管理员账号，请先通过密码登录创建';
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $_SESSION['login_ip'] = getClientIP();
                     $_SESSION['login_time'] = time();
                     addLog('', 'login_success');
-                    header('Location: dashboard.php');
+                    header('Location: admin');
                     exit;
                 } else {
                     addLog('', 'login_fail');
@@ -559,7 +559,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 <div class="login-box">
     <div class="icon"><i class="fas fa-shield-alt"></i></div>
     <h2>管理员登录</h2>
-    <p class="sub">Online Mirror 后台管理系统 v3.0</p>
+    <p class="sub">Online Mirror 后台管理系统 v4.0</p>
     
     <?php if ($error): ?>
     <div class="error"><i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?></div>
@@ -637,7 +637,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     </div>
     
     <div class="back-link">
-        <a href="index.php"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <a href="/"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
 </div>
 
@@ -682,7 +682,7 @@ function sendVerificationCode() {
     formData.append('csrf_token', '<?php echo $csrf; ?>');
     formData.append('vcode_email', email);
     
-    fetch('login.php', {
+    fetch('/login', {
         method: 'POST',
         body: formData
     })

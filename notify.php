@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 通知检查接口
+ * Online-Mirror v4.0 - 通知检查接口
  * 当有新拍照时在dashboard顶部显示通知
  */
 require_once __DIR__ . '/config.php';

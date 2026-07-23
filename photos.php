@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 照片查看页
+ * Online-Mirror v4.0 - 照片查看页
  * 支持：灯箱大图预览、GPS地图、浏览器指纹、IP归属地
  */
 session_start();
@@ -46,7 +46,7 @@ if ($type === 'delete' && isset($_GET['photo_id']) && isLoggedIn()) {
         $stmt->execute([$id]);
         addLog($id, 'delete_photo');
     }
-    header("Location: photos.php?id=" . urlencode($id));
+    header("Location: photos/" . urlencode($id));
     exit;
 }
 
@@ -65,7 +65,7 @@ if ($type === 'clear' && isLoggedIn()) {
     $stmt = $db->prepare("UPDATE mir_links SET captures = 0 WHERE link_id = ?");
     $stmt->execute([$id]);
     addLog($id, 'clear_photos');
-    header("Location: photos.php?id=" . urlencode($id));
+    header("Location: photos/" . urlencode($id));
     exit;
 }
 
@@ -239,7 +239,7 @@ body {
     color: #8080c0;
 }
 
-/* v3.0 AI分析与反向图搜 */
+/* v4.0 AI分析与反向图搜 */
 .ai-btn, .reverse-btn {
     display:inline-flex; align-items:center; gap:4px;
     padding:5px 12px; border-radius:6px;
@@ -505,7 +505,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
-            <a href="dashboard.php" class="btn-dash"><i class="fas fa-tachometer-alt"></i> 控制台</a>
+            <a href="admin" class="btn-dash"><i class="fas fa-tachometer-alt"></i> 控制台</a>
             <?php if ($total > 0 && isLoggedIn()): ?>
                 <a href="?id=<?php echo urlencode($id); ?>&type=clear&csrf_token=<?php echo $csrf; ?>" class="btn-clear" onclick="return confirm('确定清空所有照片？')"><i class="fas fa-trash"></i> 清空</a>
             <?php endif; ?>
@@ -589,7 +589,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
             </div>
             <?php endif; ?>
             
-            <!-- v3.0 AI分析 & 反向图搜 & 地图按钮（合并一行） -->
+            <!-- v4.0 AI分析 & 反向图搜 & 地图按钮（合并一行） -->
             <div style="padding:0 14px 14px;display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="ai-btn" onclick="analyzePhoto('<?php echo htmlspecialchars($photo['file_path']); ?>', this)" title="AI人像分析">
                     <i class="fas fa-robot"></i> AI分析
@@ -684,7 +684,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         }
     }
     
-    // v3.0 AI分析功能
+    // v4.0 AI分析功能
     var analyzingPhotos = {};
     
     function analyzePhoto(photoPath, btn) {
@@ -716,7 +716,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         formData.append('link_id', '<?php echo htmlspecialchars($id); ?>');
         formData.append('photo_path', photoPath);
         
-        fetch('ajax_ai_analyze.php', {
+        fetch('api/ai-analyze', {
             method: 'POST',
             body: formData
         })
@@ -754,7 +754,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         });
     }
     
-    // v3.0 AI结果收起展开
+    // v4.0 AI结果收起展开
     function toggleAIResult(photoId) {
         var div = document.getElementById('aiResult_' + photoId);
         if (!div) return;
@@ -771,7 +771,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         }
     }
     
-    // v3.0 反向图搜功能
+    // v4.0 反向图搜功能
     function reverseSearch(photoPath) {
         var siteUrl = '<?php echo SITE_URL; ?>';
         var imgUrl = siteUrl + 'img/' + photoPath;

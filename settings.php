@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 系统设置
+ * Online-Mirror v4.0 - 系统设置
  * 邮箱通知设置 + AI 人像分析设置
  */
 require_once __DIR__ . '/config.php';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!empty($receive_addr)) setSetting('email_receive_address', $receive_addr);
     }
     
-    header('Location: settings.php?tab=email&saved=email');
+    header('Location: settings?tab=email&saved=email');
     exit;
 }
 
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     setSetting('donation_channels', json_encode($channels));
     
-    header('Location: settings.php?tab=donation&saved=donation');
+    header('Location: settings?tab=donation&saved=donation');
     exit;
 }
 
@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     // 有key就自动启用
     setSetting('ai_enabled', !empty($api_key) ? '1' : '0');
     
-    header('Location: settings.php?tab=ai&saved=ai');
+    header('Location: settings?tab=ai&saved=ai');
     exit;
 }
 
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $dur = intval($_POST['splash_duration'] ?? 3000);
     setSetting('splash_duration', strval(max(1000, min(60000, $dur))));
     
-    header('Location: settings.php?tab=splash&saved=splash');
+    header('Location: settings?tab=splash&saved=splash');
     exit;
 }
 
@@ -614,7 +614,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     <div class="success-msg"><i class="fas fa-check-circle"></i> 邮箱设置已保存</div>
     <?php endif; ?>
     
-    <form method="POST" action="settings.php?tab=email">
+    <form method="POST" action="settings?tab=email">
         <input type="hidden" name="action" value="save_email">
         <input type="hidden" name="csrf_token" value="<?php echo $csrf; ?>">
         
@@ -787,7 +787,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     <div class="success-msg"><i class="fas fa-check-circle"></i> 闪屏设置已保存</div>
     <?php endif; ?>
     
-    <form method="post" action="settings.php?tab=splash">
+    <form method="post" action="settings?tab=splash">
         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
         <input type="hidden" name="action" value="save_splash">
         <input type="hidden" name="splash_enabled" id="splashEnabled" value="<?= $splash_enabled ? '1' : '0' ?>">
@@ -973,7 +973,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 <div id="selfDestructBody" style="display:none;">
     <div class="maintenance-card" style="border-color:rgba(255,0,0,0.3);">
         <h3 style="color:#ff6b6b;"><i class="fas fa-skull-crossbones maintenance-icon-danger"></i> 高危操作确认</h3>
-        <p style="color:#ff6b6b;">此操作将完全删除 /var/www/html/mirror/ 目录下的所有文件和数据，<strong>不可恢复</strong>！</p>
+        <p style="color:#ff6b6b;">此操作将完全删除当前目录下的所有文件和数据，<strong>不可恢复</strong>！</p>
         <div id="sdCountdown" class="countdown" style="display:none;">10</div>
         <button class="btn-danger" id="sdBtn" onclick="startSDCountdown()"><i class="fas fa-skull-crossbones"></i> 开始自毁（10秒倒计时）</button>
         <div id="sdConfirmArea" class="confirm-area" style="display:none;">
@@ -1018,7 +1018,7 @@ function sendMaintenanceVcode(prefix) {
     formData.append('csrf_token', '<?php echo $csrf; ?>');
     formData.append('vcode_email', email);
     
-    fetch('login.php', { method: 'POST', body: formData })
+    fetch('/login', { method: 'POST', body: formData })
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.success) { alert('✅ 验证码已发送到您的邮箱'); }
@@ -1108,7 +1108,7 @@ document.addEventListener('change', function(e) {
 
 <?php endif; ?>
     <div class="back-link">
-        <a href="dashboard.php"><i class="fas fa-arrow-left"></i> 返回控制台</a>
+        <a href="admin"><i class="fas fa-arrow-left"></i> 返回控制台</a>
     </div>
 </div>
 

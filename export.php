@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 数据导出
+ * Online-Mirror v4.0 - 数据导出
  * 功能：一键导出所有照片ZIP + 日志CSV
  */
 require_once __DIR__ . '/config.php';
@@ -225,7 +225,7 @@ body {
     </div>
     
     <div class="back-link">
-        <a href="dashboard.php"><i class="fas fa-arrow-left"></i> 返回控制台</a>
+        <a href="admin"><i class="fas fa-arrow-left"></i> 返回控制台</a>
     </div>
 </div>
 </body>

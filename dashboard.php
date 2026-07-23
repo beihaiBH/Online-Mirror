@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 管理后台
+ * Online-Mirror v4.0 - 管理后台
  * 功能：总览(趋势图+AJAX照片)、链接管理(含标签)、登录记录、封禁IP、数据导出
  */
 require_once __DIR__ . '/config.php';
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $tags = mb_substr(strip_tags($tags), 0, 200);
     $stmt = $db->prepare("UPDATE mir_links SET tags = ? WHERE link_id = ?");
     $stmt->execute([$tags, $link_id]);
-    header("Location: dashboard.php?tab=links");
+    header("Location: admin?tab=links");
     exit;
 }
 
@@ -56,7 +56,7 @@ if (isset($_GET['delete_link']) && $user['role'] === 'admin') {
     $stmt = $db->prepare("DELETE FROM mir_links WHERE link_id = ?");
     $stmt->execute([$link_id]);
     addLog($link_id, 'delete_link');
-    header("Location: dashboard.php?tab=links");
+    header("Location: admin?tab=links");
     exit;
 }
 
@@ -65,7 +65,7 @@ if (isset($_GET['unban_ip']) && $user['role'] === 'admin') {
     $ip = trim($_GET['unban_ip']);
     $stmt = $db->prepare("DELETE FROM mir_banned_ips WHERE ip_address = ?");
     $stmt->execute([$ip]);
-    header("Location: dashboard.php?tab=banned");
+    header("Location: admin?tab=banned");
     exit;
 }
 
@@ -141,7 +141,7 @@ $photo_total = $db->query("SELECT COUNT(*) FROM mir_photos")->fetchColumn();
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>控制台 v3.0 · 网恋照妖镜</title>
+<title>控制台 v4.0 · 网恋照妖镜</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
@@ -444,25 +444,25 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
 </head>
 <body>
 <div class="topbar">
-    <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v3.0</div>
+    <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v4.0</div>
     <div class="nav">
-        <a href="index.php"><i class="fas fa-home"></i> 首页</a>
-        <a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
-        <a href="export.php" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
-        <a href="settings.php" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
-        <a href="settings.php" id="notifyBell" style="position:relative;cursor:pointer;" title="点击设置通知 | 长按打开详细设置">
+        <a href="/"><i class="fas fa-home"></i> 首页</a>
+        <a href="admin" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
+        <a href="export" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
+        <a href="settings" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
+        <a href="settings" id="notifyBell" style="position:relative;cursor:pointer;" title="点击设置通知 | 长按打开详细设置">
             <i class="fas fa-bell"></i>
             <?php if (getSetting('email_enabled') === '1'): ?>
             <span style="position:absolute;bottom:-2px;right:-4px;font-size:8px;color:#4caf50;"><i class="fas fa-circle"></i></span>
             <?php endif; ?>
             <span id="notifyBadge" style="display:none;position:absolute;top:2px;right:4px;width:16px;height:16px;background:#ff6b6b;border-radius:50%;font-size:9px;color:#fff;display:none;align-items:center;justify-content:center;">0</span>
         </a>
-        <a href="login.php?action=logout" class="logout"><i class="fas fa-sign-out-alt"></i> 退出 (<?php echo htmlspecialchars($user['username']); ?>)</a>
+        <a href="logout" class="logout"><i class="fas fa-sign-out-alt"></i> 退出 (<?php echo htmlspecialchars($user['username']); ?>)</a>
     </div>
     
     <script>
     function checkNotify() {
-        fetch('notify.php')
+        fetch('api/notify')
             .then(r => r.json())
             .then(d => {
                 var badge = document.getElementById('notifyBadge');
@@ -562,7 +562,7 @@ new Chart(document.getElementById('trendChart'), {
 <h3 class="section-title">
     <span><i class="fas fa-clock"></i> 最近捕获照片</span>
     <span>
-        <a href="export.php" target="_blank" class="export-btn"><i class="fas fa-download"></i> 导出数据</a>
+        <a href="export" target="_blank" class="export-btn"><i class="fas fa-download"></i> 导出数据</a>
         <a href="javascript:void(0)" class="refresh-btn" onclick="location.reload()"><i class="fas fa-sync-alt"></i> 刷新</a>
     </span>
 </h3>
@@ -582,7 +582,7 @@ function loadMorePhotos() {
     if (!hasMorePhotos) return;
     document.getElementById('loadMoreBtn').disabled = true;
     document.getElementById('loadMoreBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
-    fetch('ajax_photos.php?page=' + photoPage)
+    fetch('api/photos?page=' + photoPage)
         .then(r => r.json())
         .then(data => {
             const grid = document.getElementById('photoGrid');
@@ -596,7 +596,7 @@ function loadMorePhotos() {
             data.photos.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'photo-mini';
-                div.innerHTML = '<a href="photos.php?id=' + encodeURIComponent(p.link_id) + '">' +
+                div.innerHTML = '<a href="photos/' + encodeURIComponent(p.link_id) + '">' +
                     '<img src="img/' + p.file_path + '" alt="照片" loading="lazy"></a>' +
                     '<div class="info">' +
                     '<div><i class="far fa-clock"></i> ' + p.created_at + '</div>' +
@@ -624,7 +624,7 @@ loadMorePhotos();
 <!-- ==================== 链接管理 ==================== -->
 <h3 class="section-title">
     <span><i class="fas fa-link"></i> 链接列表（含标签管理）</span>
-    <a href="dashboard.php?tab=links" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
+    <a href="admin?tab=links" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
 </h3>
 <?php if (empty($recent_links)): ?>
 <p style="color:#8080a0;padding:20px;text-align:center;">暂无链接，去首页生成一个吧～</p>
@@ -684,7 +684,7 @@ loadMorePhotos();
                 </td>
                 <td><?php echo date('m-d H:i', strtotime($link['created_at'])); ?></td>
                 <td>
-                    <a href="photos.php?id=<?php echo urlencode($link['link_id']); ?>" class="action-link"><i class="fas fa-images"></i></a>
+                    <a href="photos/<?php echo urlencode($link['link_id']); ?>" class="action-link"><i class="fas fa-images"></i></a>
                     <?php if ($user['role'] === 'admin'): ?>
                     <a href="?tab=links&delete_link=<?php echo urlencode($link['link_id']); ?>" class="action-link" style="color:#ff6b6b;" onclick="return confirm('删除此链接及所有照片？')"><i class="fas fa-trash"></i></a>
                     <?php endif; ?>
@@ -725,7 +725,7 @@ function editTags(linkId, currentTags) {
 <!-- ==================== 登录记录 ==================== -->
 <h3 class="section-title">
     <span><i class="fas fa-history"></i> 访问/操作日志</span>
-    <a href="dashboard.php?tab=logs" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
+    <a href="admin?tab=logs" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
 </h3>
 <div class="table-wrap">
     <table>
@@ -767,7 +767,7 @@ function editTags(linkId, currentTags) {
 <!-- ==================== 封禁IP ==================== -->
 <h3 class="section-title">
     <span><i class="fas fa-ban"></i> 封禁IP列表</span>
-    <a href="dashboard.php?tab=banned" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
+    <a href="admin?tab=banned" class="refresh-btn"><i class="fas fa-sync-alt"></i> 刷新</a>
 </h3>
 
 <!-- 手动封禁表单（点击展开） -->

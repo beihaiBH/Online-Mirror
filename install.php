@@ -236,34 +236,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyInstalled) {
                         . "        }\n"
                         . "    }\n"
                         . "    return \$pdo;\n"
+                        . "\n"
+                        . "// ========== 🧩 加载辅助函数 ==========\n"
+                        . "if (file_exists(__DIR__ . \"/functions.php\")) {\n"
+                        . "    require_once __DIR__ . \"/functions.php\";\n"
+                        . "}\n"
                         . "}\n";
                 }
 
-                // 只追加 getDB() 之后的其他辅助函数（跳过getDB本身，模板已有）
-                $oldConfig = file_get_contents(__DIR__ . '/config.php');
-                // 找 getDB() 之后的下一个函数定义或文件末尾
-                $pos = strpos($oldConfig, 'function getDB()');
-                if ($pos !== false) {
-                    $afterGetDB = substr($oldConfig, $pos);
-                    // 跳过完整 getDB() 函数（数花括号）
-                    $braceCount = 0;
-                    $inFunction = false;
-                    $skipTo = 0;
-                    for ($i = 0; $i < strlen($afterGetDB); $i++) {
-                        $ch = $afterGetDB[$i];
-                        if ($ch === '{') { $braceCount++; $inFunction = true; }
-                        if ($ch === '}') { $braceCount--; }
-                        if ($inFunction && $braceCount === 0) {
-                            $skipTo = $i + 1;
-                            break;
-                        }
-                    }
-                    $restFunctions = trim(substr($afterGetDB, $skipTo));
-                    if (!empty($restFunctions)) {
-                        $configContent .= "\n" . $restFunctions;
-                    }
-                }
-                
+                // ✅ 所有辅助函数已通过 functions.php 独立加载（config.template.php 自动引用）
                 file_put_contents($configFile, $configContent);
                 chmod($configFile, 0644);
                 
@@ -344,7 +325,7 @@ p { color: #aaa; margin-bottom: 24px; line-height: 1.6; }
     <div class="check">✅</div>
     <h2>🎉 安装成功！</h2>
     <p>
-        网恋照妖镜 v3.0 已安装完成。<br>
+        网恋照妖镜 v4.0 已安装完成。<br>
         数据库表已创建，管理员账号已就绪。
     </p>
     <div class="warn">
@@ -352,14 +333,14 @@ p { color: #aaa; margin-bottom: 24px; line-height: 1.6; }
         如未自动删除，请手动删除 <code>install.php</code>
     </div>
     <br>
-    <a href="login.php" class="btn">🔐 前往登录后台</a>
+    <a href='/login' class="btn">🔐 前往登录后台</a>
     <br><br>
-    <a href="index.php" style="color:#667eea;font-size:14px;text-decoration:none;">🏠 返回首页</a>
+    <a href="/" style="color:#667eea;font-size:14px;text-decoration:none;">🏠 返回首页</a>
 </div>
 <script>
 setTimeout(function() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'install.php?action=cleanup', true);
+    xhr.open('GET', 'install?action=cleanup', true);
     xhr.send();
 }, 3000);
 </script>
@@ -379,7 +360,7 @@ setTimeout(function() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>一键安装 · 网恋照妖镜 v3.0</title>
+<title>一键安装 · 网恋照妖镜 v4.0</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }

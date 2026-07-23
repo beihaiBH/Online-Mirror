@@ -1,0 +1,50 @@
+# ================================================
+# Online-Mirror v4.0 - URL 重写规则 (Apache)
+# 启用方法：确保 mod_rewrite 已加载
+# 使用方法：将本文件放在项目根目录
+# ================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # ========== Clean URL 重写规则 (MVC) ==========
+
+    # 首页
+    RewriteRule ^$ index.php [L]
+
+    # 捕获页: /capture/ID  →  capture.php?id=ID
+    RewriteRule ^capture/save$ save.php [QSA,L]
+    RewriteRule ^capture/([^/]+)$ capture.php?id=$1 [QSA,L]
+
+    # 照片查看: /photos/ID  →  photos.php?id=ID
+    RewriteRule ^photos/([^/]+)$ photos.php?id=$1 [QSA,L]
+
+    # 管理后台: /admin  →  dashboard.php
+    RewriteRule ^admin(/?)$ dashboard.php [QSA,L]
+
+    # 登录/登出
+    RewriteRule ^login$ login.php [L]
+    RewriteRule ^logout$ login.php?action=logout [L]
+
+    # 其他页面
+    RewriteRule ^settings$ settings.php [QSA,L]
+    RewriteRule ^install$ install.php [L]
+    RewriteRule ^export$ export.php [QSA,L]
+
+    # API 端点
+    RewriteRule ^api/notify$ notify.php [L]
+    RewriteRule ^api/photos$ ajax_photos.php [QSA,L]
+    RewriteRule ^api/ai-analyze$ ajax_ai_analyze.php [L]
+
+    # BUGFIX_LOG
+    RewriteRule ^fixlog$ BUGFIX_LOG.md [L]
+</IfModule>
+
+# ========== 🔒 安全 ==========
+<FilesMatch "\.(sql|md|log)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+Options -Indexes
