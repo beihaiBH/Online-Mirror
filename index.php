@@ -1381,7 +1381,7 @@ body {
             <span class="divider">|</span>
             <a href="logout"><i class="fas fa-sign-out-alt"></i> 退出</a>
         <?php else: ?>
-            <a href='/login'><i class="fas fa-lock"></i> 管理员登录</a>
+            <a href='./login'><i class="fas fa-lock"></i> 管理员登录</a>
         <?php endif; ?>
         </div>
     </div>
