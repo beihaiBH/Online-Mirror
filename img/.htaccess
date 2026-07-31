@@ -1,5 +1,29 @@
+# ================================================
+# Online-Mirror - 图片目录安全规则
+# 禁止执行任何脚本，仅允许静态图片访问
+# 兼容 Apache 2.2 / 2.4+
+# ================================================
+
 Options -Indexes
-<FilesMatch "\.(php|php5|phtml|inc|cgi|pl|sh|py)$">
-Order Deny,Allow
-Deny from all
+
+# 禁止在图片目录执行脚本
+<FilesMatch "\.(php|php5|phtml|inc|cgi|pl|sh|py|asp|aspx|jsp)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 禁止访问隐藏文件
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
 </FilesMatch>

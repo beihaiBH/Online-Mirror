@@ -2,6 +2,7 @@
 # Online-Mirror v4.0 - URL 重写规则 (Apache)
 # 启用方法：确保 mod_rewrite 已加载
 # 使用方法：将本文件放在项目根目录
+# 兼容 Apache 2.2 / 2.4+（旧版 Order/Deny 语法 + 新版 Require 语法）
 # ================================================
 
 <IfModule mod_rewrite.c>
@@ -41,10 +42,41 @@
     RewriteRule ^fixlog$ BUGFIX_LOG.md [L]
 </IfModule>
 
-# ========== 🔒 安全 ==========
-<FilesMatch "\.(sql|md|log)$">
-    Order Allow,Deny
-    Deny from all
+# ========== 🔒 安全防护 ==========
+
+# 禁止列出目录
+Options -Indexes
+
+# 禁止访问敏感文件（数据库、日志、备份、配置等）
+# 兼容 Apache 2.4+ (Require) 与 Apache 2.2 (Order/Deny)
+<FilesMatch "\.(sql|md|log|bak|old|backup|ini|sh|env|lock|git|svn)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
 </FilesMatch>
 
-Options -Indexes
+# 禁止直接访问隐藏文件（.htaccess 本身、.git 等）
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 禁止访问 PHP 备份/模板文件
+<FilesMatch "\.(php\.bak|php\.old|phps|phtml|inc)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
