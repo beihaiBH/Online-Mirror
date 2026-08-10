@@ -637,7 +637,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     </div>
     
     <div class="back-link">
-        <a href="/"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <a href="./"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
 </div>
 
