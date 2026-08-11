@@ -447,7 +447,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
     <div class="brand"><i class="fas fa-camera"></i> 网恋照妖镜 v4.0</div>
     <div class="nav">
         <a href="<?= BASE_PATH ?>/" class="home-link"><i class="fas fa-home"></i> 首页</a>
-        <a href="admin" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
+        <a href="./dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
         <a href="export" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
         <a href="settings" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
         <a href="settings" id="notifyBell" style="position:relative;cursor:pointer;" title="点击设置通知 | 长按打开详细设置">
