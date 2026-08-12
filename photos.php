@@ -505,7 +505,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
-            <a href="./dashboard.php" class="btn-dash"><i class="fas fa-tachometer-alt"></i> 控制台</a>
+            <a href="./index.php" class="btn-dash"><i class="fas fa-tachometer-alt"></i> ←首页</a>
             <?php if ($total > 0 && isLoggedIn()): ?>
                 <a href="?id=<?php echo urlencode($id); ?>&type=clear&csrf_token=<?php echo $csrf; ?>" class="btn-clear" onclick="return confirm('确定清空所有照片？')"><i class="fas fa-trash"></i> 清空</a>
             <?php endif; ?>
