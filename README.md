@@ -207,6 +207,24 @@
 
 > ⚠️ 首次使用请登录后台修改密码！
 
+
+### 🔧 Nginx 生产配置模板
+仓库内提供 `mirror.conf`，为适配本项目的完整 Nginx 站点模板：包含强制HTTPS、伪静态路由、`/mirror/`前缀剥离、uploads/img目录禁止执行PHP、安全响应头。
+
+> ⚠️模板为通用占位模板，**部署前必须修改**：
+> 1. `server_name example.com` 修改为你的真实域名
+> 2. SSL证书路径替换为 Let's Encrypt 或你的证书真实路径
+> 3. `root /path/to/mirror` 修改为本项目网站根目录
+> 4. `fastcgi_pass unix:/var/run/php/php8.x-fpm.sock;` 修改为服务器实际 php‑fpm socket 路径
+> 5. HSTS 的 `preload` 谨慎开启，域名长期不变才建议启用
+
+部署操作：
+1. 修改配置内全部占位参数
+2. 将配置复制到 `/etc/nginx/conf.d/mirror.conf`
+3. 语法校验：`nginx -t`
+4. 重载生效：`nginx -s reload`
+
+> 开发环境可以直接使用 php‑fpm 内置服务运行，Nginx 不是必须。
 ---
 
 ## 📄 页面说明
