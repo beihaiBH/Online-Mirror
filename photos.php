@@ -16,7 +16,7 @@ if (isIPBanned()) {
     if ($is_system && $ban_info && $ban_info['created_at']) {
         $remaining = max(0, 86400 - (time() - strtotime($ban_info['created_at'])));
     }
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(170,212,244,0.08);border:1px solid rgba(170,212,244,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#aad4f4;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style></head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
 }
 
 $id = trim($_GET['id'] ?? '');
@@ -111,18 +111,20 @@ document.addEventListener('DOMContentLoaded', function() {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f0c29;
-    color: #e0e0e0;
+    background: linear-gradient(135deg, #fffdfe 0%, #fff7fa 30%, #fdf0f6 65%, #fff9fb 100%);
+    background-attachment: fixed;
+    color: #6b5560;
     min-height: 100vh;
 }
 .header {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.78);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,182,203,0.28);
     padding: 20px;
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 4px 24px rgba(255,170,195,0.08);
 }
 .header-inner {
     max-width: 1200px;
@@ -133,19 +135,19 @@ body {
     flex-wrap: wrap;
     gap: 10px;
 }
-.header h2 { font-size: 20px; }
-.header h2 small { font-size: 14px; color: #8080a0; font-weight: normal; }
-.header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.header h2 { font-size: 20px; color: #7a5c68; }
+.header h2 small { font-size: 14px; color: #bfa5b1; font-weight: normal; }
+.header .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .header .actions a {
     padding: 8px 16px; border-radius: 8px; text-decoration: none;
     font-size: 13px; transition: all 0.3s;
 }
-.btn-back { background: rgba(255,255,255,0.08); color: #a0a0b8; }
-.btn-back:hover { background: rgba(255,255,255,0.12); }
-.btn-clear { background: rgba(255,80,80,0.15); color: #ff6b6b; }
-.btn-clear:hover { background: rgba(255,80,80,0.25); }
-.btn-dash { background: rgba(102,126,234,0.15); color: #667eea; }
-.btn-dash:hover { background: rgba(102,126,234,0.25); }
+.btn-back { background: rgba(255,255,255,0.9); color: #a8919f; border: 1px solid rgba(255,182,203,0.35); }
+.btn-back:hover { background: #fff; color: #d97ba0; }
+.btn-clear { background: rgba(255,140,160,0.12); color: #ef7f9b; border: 1px solid rgba(255,140,160,0.22); }
+.btn-clear:hover { background: rgba(255,140,160,0.2); }
+.btn-dash { background: rgba(255,182,203,0.18); color: #d97ba0; border: 1px solid rgba(255,182,203,0.32); }
+.btn-dash:hover { background: rgba(255,182,203,0.3); }
 
 .content { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
@@ -156,17 +158,18 @@ body {
     gap: 12px; margin-bottom: 24px;
 }
 .stat-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,182,203,0.3);
     border-radius: 16px;
     padding: 16px; text-align: center;
+    box-shadow: 0 4px 18px rgba(255,170,195,0.09);
 }
 .stat-card .num {
     font-size: 28px; font-weight: 700;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #ff9fbb, #e8a8d4);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.stat-card .label { font-size: 12px; color: #8080a0; margin-top: 4px; }
+.stat-card .label { font-size: 12px; color: #bfa5b1; margin-top: 4px; }
 
 /* 照片卡片 + 灯箱 */
 .photo-grid {
@@ -175,17 +178,18 @@ body {
     gap: 16px;
 }
 .photo-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(255,182,203,0.3);
     border-radius: 16px;
     overflow: hidden;
     transition: all 0.3s;
+    box-shadow: 0 4px 18px rgba(255,170,195,0.09);
 }
-.photo-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255,150,185,0.2); }
 .photo-card .img-wrap {
     width: 100%;
     aspect-ratio: 3/4;
-    background: #1a1a2e;
+    background: #fff6f9;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -196,12 +200,12 @@ body {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    background: #111;
+    background: #fff;
 }
 .photo-card .info {
     padding: 12px 14px;
     font-size: 12px;
-    color: #8080a0;
+    color: #b09aa5;
 }
 .photo-card .info .row {
     display: flex;
@@ -211,32 +215,33 @@ body {
 }
 .photo-card .info .row:last-child { margin-bottom: 0; }
 .photo-card .info .del-btn {
-    color: #ff6b6b; text-decoration: none;
+    color: #ef7f9b; text-decoration: none;
     padding: 4px 8px; border-radius: 6px;
-    background: rgba(255,80,80,0.1);
+    background: rgba(255,140,160,0.12);
     font-size: 11px; transition: all 0.3s;
 }
-.photo-card .info .del-btn:hover { background: rgba(255,80,80,0.2); }
+.photo-card .info .del-btn:hover { background: rgba(255,140,160,0.22); }
 .photo-card .info .download-btn {
-    color: #4caf50; text-decoration: none;
+    color: #56b47e; text-decoration: none;
     padding: 4px 8px; margin-right: 6px;
-    border-radius: 6px; background: rgba(76,175,80,0.1);
+    border-radius: 6px; background: rgba(140,205,170,0.16);
     font-size: 11px; transition: all 0.3s;
 }
-.photo-card .info .download-btn:hover { background: rgba(76,175,80,0.2); }
+.photo-card .info .download-btn:hover { background: rgba(140,205,170,0.3); }
 .photo-card .fingerprint {
     padding: 0 14px 10px;
     font-size: 11px;
-    color: #606080;
+    color: #c4aeb8;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    align-items: center;
 }
 .photo-card .fingerprint .tag {
-    background: rgba(102,126,234,0.1);
+    background: rgba(255,182,203,0.18);
     padding: 2px 8px;
     border-radius: 4px;
-    color: #8080c0;
+    color: #d18aa8;
 }
 
 /* v4.0 AI分析与反向图搜 */
@@ -246,102 +251,106 @@ body {
     font-size:11px; cursor:pointer; transition:all 0.3s; border:none;
 }
 .ai-btn {
-    background:rgba(102,126,234,0.12); color:#667eea;
+    background:rgba(255,182,203,0.18); color:#d97ba0;
 }
-.ai-btn:hover { background:rgba(102,126,234,0.25); }
+.ai-btn:hover { background:rgba(255,182,203,0.32); }
 .ai-btn.loading {
-    background:rgba(255,152,0,0.15); color:#ff9800;
-    pointer-events:none; opacity:0.7;
+    background:rgba(255,190,130,0.2); color:#e09a4c;
+    pointer-events:none; opacity:0.75;
 }
 .ai-btn.disabled {
-    background:rgba(255,80,80,0.1); color:#ff6b6b;
-    cursor:not-allowed; opacity:0.6;
+    background:rgba(255,140,160,0.12); color:#ef7f9b;
+    cursor:not-allowed; opacity:0.65;
 }
 .reverse-btn {
-    background:rgba(76,175,80,0.1); color:#4caf50;
+    background:rgba(140,205,170,0.16); color:#56b47e;
 }
-.reverse-btn:hover { background:rgba(76,175,80,0.2); }
+.reverse-btn:hover { background:rgba(140,205,170,0.3); }
 
 .ai-result {
     display:none;
     padding:10px 14px 14px;
-    background:rgba(102,126,234,0.06);
-    border-top:1px solid rgba(102,126,234,0.1);
+    background:rgba(255,244,248,0.75);
+    border-top:1px solid rgba(255,182,203,0.28);
     font-size:12px; line-height:1.7;
+    color:#6b5560;
 }
 .ai-result.show { display:block; }
 .ai-result .ai-toggle-bar {
     display:flex; align-items:center; justify-content:space-between;
     padding:0 0 6px; margin-bottom:6px;
-    border-bottom:1px solid rgba(255,255,255,0.04);
+    border-bottom:1px solid rgba(255,182,203,0.22);
 }
 .ai-result .ai-toggle-bar .ai-toggle-btn {
-    background:none; border:none; color:#667eea; font-size:11px; cursor:pointer;
+    background:none; border:none; color:#d97ba0; font-size:11px; cursor:pointer;
     display:flex; align-items:center; gap:4px; padding:2px 6px;
     border-radius:4px; transition:all 0.2s;
 }
-.ai-result .ai-toggle-bar .ai-toggle-btn:hover { background:rgba(102,126,234,0.1); }
+.ai-result .ai-toggle-bar .ai-toggle-btn:hover { background:rgba(255,182,203,0.15); }
 .ai-result .ai-loading {
-    text-align:center; padding:12px 0; color:#8080a0;
+    text-align:center; padding:12px 0; color:#bfa5b1;
 }
 .ai-result .ai-loading i { font-size:18px; margin-bottom:6px; display:block; }
 .ai-result .ai-error {
-    text-align:center; padding:8px; color:#ff6b6b; font-size:12px;
+    text-align:center; padding:8px; color:#ef7f9b; font-size:12px;
 }
 .ai-result .ai-quota {
-    font-size:10px; color:#606080; margin-top:6px; text-align:right;
+    font-size:10px; color:#c9b4be; margin-top:6px; text-align:right;
 }
 .ai-result-inner { }
 .ai-dimension {
     display:flex; padding:2px 0;
-    border-bottom:1px solid rgba(255,255,255,0.04);
+    border-bottom:1px solid rgba(255,182,203,0.16);
 }
 .ai-dim-key {
-    color:#667eea; font-weight:600; min-width:60px; flex-shrink:0;
+    color:#d97ba0; font-weight:600; min-width:60px; flex-shrink:0;
 }
-.ai-dim-val { color:#c0c0d0; }
-.ai-line { padding:2px 0; color:#b0b0c0; }
+.ai-dim-val { color:#6b5560; }
+.ai-line { padding:2px 0; color:#7d6772; }
 
 /* 反向图搜弹窗 */
 .reverse-modal {
     display:none;
     position:fixed; top:0; left:0; right:0; bottom:0;
-    z-index:9999; background:rgba(0,0,0,0.8);
+    z-index:9999; background:rgba(140,105,125,0.32);
+    backdrop-filter: blur(4px);
     justify-content:center; align-items:center;
 }
 .reverse-modal.show { display:flex; }
 .reverse-modal .modal-box {
-    background:#1a1a2e;
-    border:1px solid rgba(255,255,255,0.12);
+    background:linear-gradient(160deg, #ffffff 0%, #fff5f9 100%);
+    border:1px solid rgba(255,182,203,0.4);
     border-radius:16px; overflow:hidden;
     width:90vw; max-width:440px;
+    box-shadow:0 24px 64px rgba(255,170,195,0.25);
 }
 .reverse-modal .modal-header {
     padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
-    border-bottom:1px solid rgba(255,255,255,0.06);
+    border-bottom:1px solid rgba(255,182,203,0.22);
 }
-.reverse-modal .modal-header h3 { font-size:15px; }
+.reverse-modal .modal-header h3 { font-size:15px; color:#7a5c68; }
 .reverse-modal .modal-header .close-btn {
-    font-size:22px; color:#8080a0; cursor:pointer; border:none; background:none;
+    font-size:22px; color:#bfa5b1; cursor:pointer; border:none; background:none;
 }
-.reverse-modal .modal-header .close-btn:hover { color:#fff; }
+.reverse-modal .modal-header .close-btn:hover { color:#ef7f9b; }
 .reverse-modal .modal-body { padding:16px 20px 20px; }
 .reverse-modal .search-option {
     display:flex; align-items:center; gap:12px;
     padding:12px 14px; margin-bottom:8px;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.7);
+    border:1px solid rgba(255,182,203,0.28);
     border-radius:10px; cursor:pointer;
     text-decoration:none; transition:all 0.3s;
 }
 .reverse-modal .search-option:hover {
-    background:rgba(255,255,255,0.08);
-    border-color:rgba(102,126,234,0.3);
+    background:#fff;
+    border-color:rgba(255,150,185,0.5);
     transform:translateX(4px);
+    box-shadow:0 6px 18px rgba(255,170,195,0.18);
 }
 .reverse-modal .search-option .so-icon { font-size:20px; width:32px; text-align:center; }
-.reverse-modal .search-option .so-name { font-size:14px; color:#e0e0e0; }
-.reverse-modal .search-option .so-desc { font-size:11px; color:#8080a0; }
+.reverse-modal .search-option .so-name { font-size:14px; color:#6b5560; }
+.reverse-modal .search-option .so-desc { font-size:11px; color:#bfa5b1; }
 
 /* 标签 */
 .tags-display {
@@ -351,11 +360,11 @@ body {
     margin-top: 4px;
 }
 .tags-display .tag {
-    background: rgba(102,126,234,0.15);
+    background: rgba(255,182,203,0.2);
     padding: 2px 10px;
     border-radius: 6px;
     font-size: 11px;
-    color: #667eea;
+    color: #d97ba0;
 }
 
 /* 地图按钮 */
@@ -363,15 +372,15 @@ body {
     display: inline-block;
     padding: 4px 12px;
     border-radius: 6px;
-    background: rgba(76,175,80,0.12);
-    color: #4caf50;
+    background: rgba(140,205,170,0.16);
+    color: #56b47e;
     font-size: 11px;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.3s;
     border: none;
 }
-.map-btn:hover { background: rgba(76,175,80,0.25); }
+.map-btn:hover { background: rgba(140,205,170,0.3); }
 
 /* 地图弹窗遮罩 */
 .map-modal {
@@ -379,33 +388,35 @@ body {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 9999;
-    background: rgba(0,0,0,0.85);
+    background: rgba(140,105,125,0.32);
+    backdrop-filter: blur(4px);
     justify-content: center;
     align-items: center;
 }
 .map-modal.show { display: flex; }
 .map-modal .modal-box {
-    background: #1a1a2e;
-    border: 1px solid rgba(255,255,255,0.12);
+    background:linear-gradient(160deg, #ffffff 0%, #fff5f9 100%);
+    border: 1px solid rgba(255,182,203,0.4);
     border-radius: 16px;
     overflow: hidden;
     width: 90vw;
     max-width: 600px;
+    box-shadow:0 24px 64px rgba(255,170,195,0.25);
 }
 .map-modal .modal-header {
     padding: 14px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,182,203,0.22);
 }
-.map-modal .modal-header h3 { font-size: 16px; }
+.map-modal .modal-header h3 { font-size: 16px; color:#7a5c68; }
 .map-modal .modal-header .close-btn {
-    font-size: 24px; color: #8080a0;
+    font-size: 24px; color: #bfa5b1;
     cursor: pointer; border: none;
     background: none;
 }
-.map-modal .modal-header .close-btn:hover { color: #fff; }
+.map-modal .modal-header .close-btn:hover { color: #ef7f9b; }
 .map-modal .modal-body {
     height: 60vh;
     max-height: 500px;
@@ -418,16 +429,18 @@ body {
 }
 .pagination a {
     padding: 8px 16px; border-radius: 8px;
-    background: rgba(255,255,255,0.06);
-    color: #a0a0b8; text-decoration: none; font-size: 14px; transition: all 0.3s;
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,182,203,0.3);
+    color: #a8919f; text-decoration: none; font-size: 14px; transition: all 0.3s;
 }
-.pagination a:hover { background: rgba(255,255,255,0.12); }
+.pagination a:hover { background: #fff; color: #d97ba0; border-color: rgba(255,150,185,0.5); }
 .pagination a.active {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #ff9fbb, #e8a8d4);
     color: white;
+    border-color: transparent;
 }
 .empty-state {
-    text-align: center; padding: 80px 20px; color: #606080;
+    text-align: center; padding: 80px 20px; color: #c4aeb8;
 }
 .empty-state i { font-size: 64px; margin-bottom: 16px; }
 .empty-state p { font-size: 16px; }
@@ -454,8 +467,8 @@ body {
     50% { transform: scale(1.05); }
 }
 @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
-    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+    0%, 100% { box-shadow: 0 0 5px rgba(255,182,203,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,182,203,0.6); }
 }
 
 .container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
@@ -468,16 +481,16 @@ body {
 .stat-card:nth-child(5) { animation-delay: 0.25s; }
 .stat-card:nth-child(6) { animation-delay: 0.3s; }
 .stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(255,150,185,0.5); box-shadow: 0 12px 30px rgba(255,150,185,0.2); }
 .photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(255,150,185,0.5); box-shadow: 0 12px 30px rgba(255,150,185,0.2); }
 .btn-save, .btn-login, .btn-danger, .btn-warning,
 .load-more-btn, .export-btn, .refresh-btn {
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 .btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
 .load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
-    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,182,203,0.3);
 }
 .toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 .toggle:hover { transform: scale(1.05); }
@@ -485,7 +498,7 @@ body {
 .toggle-field { animation: slideDown 0.3s ease-out; }
 .modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
 table tr { transition: background 0.2s; }
-table tr:hover td { background: rgba(102,126,234,0.05) !important; }
+table tr:hover td { background: rgba(255,182,203,0.08) !important; }
 .tag { transition: all 0.2s; }
 .tag:hover { transform: translateY(-1px); }
 .footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
@@ -505,7 +518,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
-            <a href="./index.php" class="btn-dash"><i class="fas fa-tachometer-alt"></i> ←首页</a>
+            <a href="/mirror/index.php" class="btn-dash"><i class="fas fa-tachometer-alt"></i> ←首页</a>
             <?php if ($total > 0 && isLoggedIn()): ?>
                 <a href="?id=<?php echo urlencode($id); ?>&type=clear&csrf_token=<?php echo $csrf; ?>" class="btn-clear" onclick="return confirm('确定清空所有照片？')"><i class="fas fa-trash"></i> 清空</a>
             <?php endif; ?>
@@ -568,7 +581,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                     <?php endif; ?>
                 </div>
                 <?php if ($photo['city'] || $photo['isp']): ?>
-                <div class="row" style="color:#667eea;">
+                <div class="row" style="color:#aad4f4;">
                     <span><i class="fas fa-globe"></i> <?php echo htmlspecialchars($photo['city'] ?? ''); ?></span>
                     <span><?php echo htmlspecialchars($photo['isp'] ?? ''); ?></span>
                 </div>
@@ -583,7 +596,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
                 <?php if ($photo['browser_lang']): ?><span class="tag"><i class="fas fa-language"></i> <?php echo htmlspecialchars($photo['browser_lang']); ?></span><?php endif; ?>
                 <?php if ($photo['recording_seconds'] > 0): ?><span class="tag"><i class="fas fa-microphone"></i> 录音 <?php echo intval($photo['recording_seconds']); ?>秒</span><?php endif; ?>
                 <?php if ($photo['recording_file_path']): ?>
-                <span class="tag" style="background:rgba(156,39,176,0.15);border-color:rgba(156,39,176,0.25);padding:2px 6px;"><i class="fas fa-play-circle" style="color:#ce93d8;"></i>
+                <span class="tag" style="background:rgba(226,197,221,0.15);border-color:rgba(226,197,221,0.25);padding:2px 6px;"><i class="fas fa-play-circle" style="color:#e2c5dd;"></i>
                 <audio controls preload="none" style="height:32px;width:170px;vertical-align:middle;border-radius:6px;" src="<?= BASE_PATH ?>/uploads/recordings/<?php echo htmlspecialchars($photo['recording_file_path']); ?>"></audio></span>
                 <?php endif; ?>
             </div>
@@ -610,7 +623,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
             <div class="ai-result <?php echo $has_ai_result ? 'show' : ''; ?>" id="aiResult_<?php echo $photo['id']; ?>">
                 <?php if ($has_ai_result): ?>
                 <div class="ai-toggle-bar">
-                    <span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#667eea;"></i> AI分析结果</span>
+                    <span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#aad4f4;"></i> AI分析结果</span>
                     <button class="ai-toggle-btn" onclick="toggleAIResult('<?php echo $photo['id']; ?>')">
                         <i class="fas fa-chevron-up"></i> 收起
                     </button>
@@ -709,7 +722,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 分析中...';
         
         resultDiv.classList.add('show');
-        resultDiv.innerHTML = '<div class="ai-loading"><i class="fas fa-spinner fa-pulse" style="color:#667eea;"></i>🤔 AI 正在分析照片特征...</div>';
+        resultDiv.innerHTML = '<div class="ai-loading"><i class="fas fa-spinner fa-pulse" style="color:#aad4f4;"></i>🤔 AI 正在分析照片特征...</div>';
         
         var formData = new FormData();
         formData.append('action', 'analyze');
@@ -734,7 +747,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
             
             if (data.success && data.formatted) {
                 resultDiv.innerHTML = '<div class="ai-toggle-bar">' +
-                    '<span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#667eea;"></i> AI分析结果</span>' +
+                    '<span style="font-size:11px;color:#8080a0;"><i class="fas fa-robot" style="color:#aad4f4;"></i> AI分析结果</span>' +
                     '<button class="ai-toggle-btn" onclick="toggleAIResult(\'' + photoId + '\')">' +
                         '<i class="fas fa-chevron-up"></i> 收起' +
                     '</button>' +

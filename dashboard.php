@@ -148,14 +148,14 @@ $photo_total = $db->query("SELECT COUNT(*) FROM mir_photos")->fetchColumn();
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f0c29;
-    color: #e0e0e0;
+    background: linear-gradient(135deg, #fff0f5, #ffe6ef);
+    color: #442c36;
     min-height: 100vh;
 }
 .topbar {
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.75);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,160,185,0.22);
     padding: 16px 24px;
     display: flex;
     align-items: center;
@@ -168,35 +168,35 @@ body {
 }
 .topbar .brand {
     font-size: 20px; font-weight: 700;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #ff8fab, #ffc2d1);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     display: flex; align-items: center; gap: 8px;
 }
 .topbar .nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .topbar .nav a {
     padding: 8px 16px; border-radius: 8px; text-decoration: none;
-    font-size: 13px; transition: all 0.3s; color: #a0a0b8;
+    font-size: 13px; transition: all 0.3s; color: #775462;
 }
-.topbar .nav a:hover { background: rgba(255,255,255,0.06); color: #e0e0e0; }
-.topbar .nav a.active { background: rgba(102,126,234,0.15); color: #667eea; }
-.topbar .nav a.logout { color: #ff6b6b; }
+.topbar .nav a:hover { background: rgba(255,143,171,0.12); color: #442c36; }
+.topbar .nav a.active { background: rgba(255,143,171,0.20); color: #e05b84; }
+.topbar .nav a.logout { color: #e74c3c; }
 
 .tab-nav {
     display: flex; gap: 4px; padding: 16px 24px 0;
     max-width: 1200px; margin: 0 auto;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,160,185,0.20);
     overflow-x: auto;
 }
 .tab-nav a {
     padding: 10px 20px; border-radius: 10px 10px 0 0;
-    text-decoration: none; font-size: 14px; color: #8080a0;
+    text-decoration: none; font-size: 14px; color: #886472;
     transition: all 0.3s; display: flex; align-items: center; gap: 6px;
     white-space: nowrap;
 }
-.tab-nav a:hover { background: rgba(255,255,255,0.04); color: #e0e0e0; }
+.tab-nav a:hover { background: rgba(255,143,171,0.08); color: #442c36; }
 .tab-nav a.active {
-    background: rgba(102,126,234,0.12); color: #667eea;
-    border-bottom: 2px solid #667eea;
+    background: rgba(255,143,171,0.16); color: #e05b84;
+    border-bottom: 2px solid #ff8fab;
 }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
@@ -207,22 +207,22 @@ body {
     gap: 16px; margin-bottom: 24px;
 }
 .stat-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(255,160,185,0.24);
     border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s;
 }
-.stat-card:hover { transform: translateY(-2px); border-color: rgba(102,126,234,0.3); }
+.stat-card:hover { transform: translateY(-2px); border-color: rgba(255,143,171,0.45); }
 .stat-card .num {
     font-size: 32px; font-weight: 700;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #ff8fab, #ffc2d1);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.stat-card .label { font-size: 13px; color: #8080a0; margin-top: 6px; }
+.stat-card .label { font-size: 13px; color: #886472; margin-top: 6px; }
 
 /* 图表容器 */
 .chart-wrap {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.80);
+    border: 1px solid rgba(255,160,185,0.22);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 28px;
@@ -241,63 +241,63 @@ body {
 }
 .section-title .refresh-btn {
     padding: 6px 14px;
-    border: 1px solid rgba(102,126,234,0.3);
-    border-radius: 8px; background: rgba(102,126,234,0.1);
-    color: #667eea; font-size: 12px; cursor: pointer; transition: all 0.3s; text-decoration: none;
+    border: 1px solid rgba(255,143,171,0.40);
+    border-radius: 8px; background: rgba(255,143,171,0.14);
+    color: #d14f78; font-size: 12px; cursor: pointer; transition: all 0.3s; text-decoration: none;
 }
-.section-title .refresh-btn:hover { background: rgba(102,126,234,0.2); }
+.section-title .refresh-btn:hover { background: rgba(255,143,171,0.22); }
 .section-title .export-btn {
     padding: 6px 14px;
-    border: 1px solid rgba(76,175,80,0.3);
-    border-radius: 8px; background: rgba(76,175,80,0.1);
-    color: #4caf50; font-size: 12px; cursor: pointer; transition: all 0.3s; text-decoration: none;
+    border: 1px solid rgba(76,175,80,0.35);
+    border-radius: 8px; background: rgba(76,175,80,0.12);
+    color: #2e7d32; font-size: 12px; cursor: pointer; transition: all 0.3s; text-decoration: none;
 }
-.section-title .export-btn:hover { background: rgba(76,175,80,0.2); }
+.section-title .export-btn:hover { background: rgba(76,175,80,0.20); }
 
 .table-wrap {
     overflow-x: auto;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.80);
+    border: 1px solid rgba(255,160,185,0.22);
     border-radius: 16px; margin-bottom: 28px;
 }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 table th {
     text-align: left; padding: 14px 16px;
-    background: rgba(255,255,255,0.04); color: #8080a0;
+    background: rgba(255,240,245,0.7); color: #886472;
     font-weight: 500; font-size: 12px; text-transform: uppercase;
-    letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,160,185,0.20);
 }
 table td {
-    padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
-    color: #c0c0d0; max-width: 250px;
+    padding: 12px 16px; border-bottom: 1px solid rgba(255,180,200,0.18);
+    color: #5a3c48; max-width: 250px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-table tr:hover td { background: rgba(255,255,255,0.03); }
+table tr:hover td { background: rgba(255,230,238,0.65); }
 table td .badge {
     display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
 }
-.badge-active { background: rgba(76,175,80,0.15); color: #4caf50; }
-.badge-expired { background: rgba(255,152,0,0.15); color: #ff9800; }
-.badge-disabled { background: rgba(255,80,80,0.15); color: #ff6b6b; }
-.badge-banned { background: rgba(255,80,80,0.15); color: #ff6b6b; }
-table td a { color: #667eea; text-decoration: none; }
+.badge-active { background: rgba(76,175,80,0.18); color: #2e7d32; }
+.badge-expired { background: rgba(255,152,0,0.18); color: #e65100; }
+.badge-disabled { background: rgba(255,80,80,0.18); color: #d32f2f; }
+.badge-banned { background: rgba(255,80,80,0.18); color: #d32f2f; }
+table td a { color: #d14f78; text-decoration: none; }
 table td a:hover { text-decoration: underline; }
 table td .action-link { margin: 0 4px; }
 table td .tags-cell {
     display: flex; flex-wrap: wrap; gap: 4px;
 }
 table td .tag-sm {
-    background: rgba(102,126,234,0.12);
+    background: rgba(255,143,171,0.18);
     padding: 1px 6px; border-radius: 3px;
-    font-size: 10px; color: #667eea;
+    font-size: 10px; color: #c2456e;
 }
 table td .tag-edit {
     padding: 2px 6px; border-radius: 3px;
-    font-size: 10px; color: #8080a0; cursor: pointer;
+    font-size: 10px; color: #886472; cursor: pointer;
 }
-table td .tag-edit:hover { color: #667eea; }
+table td .tag-edit:hover { color: #d14f78; }
 table td .geocell {
-    font-size: 11px; color: #667eea;
+    font-size: 11px; color: #d14f78;
 }
 
 .photo-mini-grid {
@@ -306,27 +306,27 @@ table td .geocell {
     gap: 12px; margin-bottom: 28px;
 }
 .photo-mini {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(255,160,185,0.24);
     border-radius: 12px; overflow: hidden; transition: all 0.3s;
 }
-.photo-mini:hover { transform: translateY(-2px); border-color: rgba(102,126,234,0.3); }
+.photo-mini:hover { transform: translateY(-2px); border-color: rgba(255,143,171,0.45); }
 .photo-mini img {
     width: 100%; aspect-ratio: 3/4;
-    object-fit: cover; display: block; background: #111;
+    object-fit: cover; display: block; background: #fff5f8;
 }
 .photo-mini .info {
-    padding: 8px 10px; font-size: 11px; color: #8080a0;
+    padding: 8px 10px; font-size: 11px; color: #886472;
 }
 
 .load-more-wrap { text-align: center; margin-bottom: 28px; }
 .load-more-btn {
     padding: 10px 24px;
-    border: 1px solid rgba(102,126,234,0.3);
-    border-radius: 10px; background: rgba(102,126,234,0.08);
-    color: #667eea; font-size: 14px; cursor: pointer; transition: all 0.3s;
+    border: 1px solid rgba(255,143,171,0.40);
+    border-radius: 10px; background: rgba(255,143,171,0.14);
+    color: #d14f78; font-size: 14px; cursor: pointer; transition: all 0.3s;
 }
-.load-more-btn:hover { background: rgba(102,126,234,0.18); }
+.load-more-btn:hover { background: rgba(255,143,171,0.24); }
 .load-more-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .pagination {
@@ -335,49 +335,49 @@ table td .geocell {
 }
 .pagination a {
     padding: 8px 16px; border-radius: 8px;
-    background: rgba(255,255,255,0.06);
-    color: #a0a0b8; text-decoration: none; font-size: 14px; transition: all 0.3s;
+    background: rgba(255,255,255,0.80);
+    color: #775462; text-decoration: none; font-size: 14px; transition: all 0.3s;
 }
-.pagination a:hover { background: rgba(255,255,255,0.12); }
+.pagination a:hover { background: rgba(255,230,238,0.85); }
 .pagination a.active {
-    background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+    background: linear-gradient(135deg, #ff8fab, #ffc2d1); color: #ffffff;
 }
 
-.log-ua { font-size: 11px; color: #606080; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.log-success { color: #4caf50; }
-.log-fail { color: #ff6b6b; }
+.log-ua { font-size: 11px; color: #997482; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-success { color: #2e7d32; }
+.log-fail { color: #d32f2f; }
 
 /* 标签编辑弹窗 */
 .edit-overlay {
     display: none;
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.45);
     z-index: 999;
     align-items: center; justify-content: center;
 }
 .edit-overlay.show { display: flex; }
 .edit-box {
-    background: #1a1a2e;
-    border: 1px solid rgba(255,255,255,0.12);
+    background: #fff0f5;
+    border: 1px solid rgba(255,143,171,0.35);
     border-radius: 16px; padding: 24px;
     max-width: 400px; width: 90%;
 }
-.edit-box h3 { margin-bottom: 12px; font-size: 16px; }
+.edit-box h3 { margin-bottom: 12px; font-size: 16px; color:#442c36; }
 .edit-box input {
     width: 100%; padding: 10px 14px;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px; background: rgba(255,255,255,0.06);
-    color: #e0e0e0; font-size: 14px; outline: none; margin-bottom: 12px;
+    border: 1px solid rgba(255,160,185,0.30);
+    border-radius: 10px; background: #ffffff;
+    color: #442c36; font-size: 14px; outline: none; margin-bottom: 12px;
 }
 .edit-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
 .edit-box .btn-row button {
     padding: 8px 16px; border: none; border-radius: 8px;
     font-size: 13px; cursor: pointer; transition: all 0.3s;
 }
-.edit-box .btn-save { background: #667eea; color: white; }
+.edit-box .btn-save { background: #ff8fab; color: white; }
 .edit-box .btn-save:hover { opacity: 0.85; }
-.edit-box .btn-cancel { background: rgba(255,255,255,0.08); color: #a0a0b8; }
-.edit-box .btn-cancel:hover { background: rgba(255,255,255,0.12); }
+.edit-box .btn-cancel { background: #f3e4e9; color: #775462; }
+.edit-box .btn-cancel:hover { background: #e9d4dc; }
 
 @media (max-width: 640px) {
     .container { padding: 16px; }
@@ -403,8 +403,8 @@ table td .geocell {
     50% { transform: scale(1.05); }
 }
 @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
-    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+    0%, 100% { box-shadow: 0 0 5px rgba(255,143,171,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,143,171,0.6); }
 }
 
 .container, .box, .chart-wrap, .table-wrap, .login-box, .photo-card,
@@ -417,16 +417,16 @@ table td .geocell {
 .stat-card:nth-child(5) { animation-delay: 0.25s; }
 .stat-card:nth-child(6) { animation-delay: 0.3s; }
 .stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(255,143,171,0.45); box-shadow: 0 8px 25px rgba(255,170,190,0.25); }
 .photo-mini { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.photo-mini:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(255,143,171,0.45); box-shadow: 0 8px 25px rgba(255,170,190,0.25); }
 .btn-save, .btn-login, .btn-danger, .btn-warning,
 .load-more-btn, .export-btn, .refresh-btn {
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 .btn-save:hover, .btn-login:hover, .btn-danger:hover, .btn-warning:hover,
 .load-more-btn:hover, .export-btn:hover, .refresh-btn:hover {
-    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,143,171,0.28);
 }
 .toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 .toggle:hover { transform: scale(1.05); }
@@ -434,7 +434,7 @@ table td .geocell {
 .toggle-field { animation: slideDown 0.3s ease-out; }
 .modal-box, .edit-box { animation: fadeInUp 0.3s ease-out; }
 table tr { transition: background 0.2s; }
-table tr:hover td { background: rgba(102,126,234,0.05) !important; }
+table tr:hover td { background: rgba(255,230,238,0.65) !important; }
 .tag { transition: all 0.2s; }
 .tag:hover { transform: translateY(-1px); }
 .footer .social-links a { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
@@ -449,7 +449,7 @@ table tr:hover td { background: rgba(102,126,234,0.05) !important; }
         <a href="<?= BASE_PATH ?>/" class="home-link"><i class="fas fa-home"></i> 首页</a>
         <a href="./dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> 控制台</a>
         <a href="export" target="_blank" style="color:#4caf50;"><i class="fas fa-download"></i> 导出</a>
-        <a href="settings" style="color:#667eea;"><i class="fas fa-cog"></i> 设置</a>
+        <a href="settings" style="color:#aad4f4;"><i class="fas fa-cog"></i> 设置</a>
         <a href="settings" id="notifyBell" style="position:relative;cursor:pointer;" title="点击设置通知 | 长按打开详细设置">
             <i class="fas fa-bell"></i>
             <?php if (getSetting('email_enabled') === '1'): ?>
@@ -522,8 +522,8 @@ new Chart(document.getElementById('trendChart'), {
         datasets: [{
             label: '访问量',
             data: chartData.map(d => d.visits),
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(102,126,234,0.1)',
+            borderColor: '#aad4f4',
+            backgroundColor: 'rgba(170,212,244,0.1)',
             fill: true,
             tension: 0.4
         }, {
@@ -736,7 +736,7 @@ function editTags(linkId, currentTags) {
             <?php foreach ($logs as $log): 
                 $log_action = $log['action'];
                 $action_label = '<span style="color:#4caf50;">🆕 创建</span>';
-                if ($log_action === 'visit') $action_label = '<span style="color:#667eea;">👁️ 访问</span>';
+                if ($log_action === 'visit') $action_label = '<span style="color:#aad4f4;">👁️ 访问</span>';
                 elseif ($log_action === 'capture') $action_label = '<span style="color:#ff9800;">📸 拍照</span>';
                 elseif ($log_action === 'delete_link') $action_label = '<span style="color:#ff6b6b;">🗑️ 删链</span>';
                 elseif ($log_action === 'delete_photo') $action_label = '<span style="color:#ff6b6b;">🗑️ 删图</span>';
